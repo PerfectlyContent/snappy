@@ -72,32 +72,26 @@ export default function ReachOutModal({ contactData, onClose }) {
   const needsPhone = (channel === 'whatsapp' || channel === 'sms') && !phone.trim();
   const canSend = body.trim() && !needsEmail && !needsPhone;
 
-  async function handleSend() {
+  function handleSend() {
     if (!canSend) return;
-    setSending(true);
 
-    try {
-      if (channel === 'email') {
-        await api.sendMessage(email.trim(), subject, body);
-        setToast({ message: `Email sent to ${contactData.name || email}!`, type: 'success' });
-      } else if (channel === 'whatsapp') {
-        const ph = cleanPhone(phone);
-        window.open(`https://wa.me/${ph}?text=${encodeURIComponent(body)}`, '_blank');
-        setToast({ message: 'Opening WhatsApp...', type: 'success' });
-      } else if (channel === 'sms') {
-        const ph = cleanPhone(phone);
-        window.open(`sms:${ph}?body=${encodeURIComponent(body)}`, '_blank');
-        setToast({ message: 'Opening Messages...', type: 'success' });
-      }
-    } catch (err) {
-      setToast({ message: err.message, type: 'error' });
-    } finally {
-      setSending(false);
+    if (channel === 'email') {
+      const mailto = `mailto:${encodeURIComponent(email.trim())}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.open(mailto, '_blank');
+      setToast({ message: 'Opening email app...', type: 'success' });
+    } else if (channel === 'whatsapp') {
+      const ph = cleanPhone(phone);
+      window.open(`https://wa.me/${ph}?text=${encodeURIComponent(body)}`, '_blank');
+      setToast({ message: 'Opening WhatsApp...', type: 'success' });
+    } else if (channel === 'sms') {
+      const ph = cleanPhone(phone);
+      window.open(`sms:${ph}?body=${encodeURIComponent(body)}`, '_blank');
+      setToast({ message: 'Opening Messages...', type: 'success' });
     }
   }
 
   const sendLabel = {
-    email: 'Send Email',
+    email: 'Open Email',
     whatsapp: 'Open WhatsApp',
     sms: 'Open Messages',
   };
