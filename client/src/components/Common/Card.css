@@ -1,0 +1,44 @@
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--card-border);
+  overflow: hidden;
+  transition:
+    background var(--duration-hover) var(--ease-smooth),
+    border-color var(--duration-hover) var(--ease-smooth),
+    box-shadow var(--duration-hover) var(--ease-smooth),
+    transform var(--duration-fast) var(--ease-spring);
+}
+
+.card:focus-visible {
+  outline: none;
+  box-shadow: var(--interactive-focus-ring);
+}
+
+.card--default {
+  padding: var(--space-5);
+}
+
+.card--compact {
+  padding: var(--space-4);
+}
+
+.card--none {
+  padding: 0;
+}
+
+.card--hoverable {
+  cursor: pointer;
+}
+
+.card--hoverable:hover {
+  background: var(--card-bg-hover);
+  border-color: var(--card-border-hover);
+  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-1px);
+}
+
+.card--hoverable:active {
+  transform: scale(var(--interactive-active-scale));
+  box-shadow: none;
+}

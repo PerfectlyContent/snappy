@@ -1,0 +1,124 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-text);
+  font-weight: 500;
+  font-size: var(--text-sm);
+  border-radius: var(--radius-sm);
+  height: 40px;
+  padding: 0 var(--space-4);
+  transition:
+    background var(--duration-fast) var(--ease-smooth),
+    box-shadow var(--duration-fast) var(--ease-smooth),
+    transform var(--duration-micro) var(--ease-spring);
+  position: relative;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: var(--interactive-focus-ring);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(var(--interactive-active-scale));
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Primary — Purple */
+.btn--primary {
+  background: var(--accent);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+.btn--primary:hover {
+  background: var(--accent-hover);
+}
+.btn--primary:active:not(:disabled) {
+  background: #5B21B6;
+}
+
+/* Secondary */
+.btn--secondary {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+.btn--secondary:hover {
+  background: rgba(124, 58, 237, 0.15);
+}
+.btn--secondary:active:not(:disabled) {
+  background: rgba(124, 58, 237, 0.20);
+}
+
+/* Tertiary */
+.btn--tertiary {
+  background: transparent;
+  color: var(--accent);
+}
+.btn--tertiary:hover {
+  background: var(--fill-tertiary);
+}
+
+/* Destructive */
+.btn--destructive {
+  background: var(--destructive);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+.btn--destructive:hover {
+  background: #DC2626;
+}
+.btn--destructive:active:not(:disabled) {
+  background: #B91C1C;
+}
+
+/* Ghost */
+.btn--ghost {
+  background: transparent;
+  color: var(--label-secondary);
+}
+.btn--ghost:hover {
+  background: var(--fill-tertiary);
+  color: var(--label-primary);
+}
+
+/* Sizes */
+.btn--small {
+  height: 32px;
+  padding: 0 var(--space-3);
+  font-size: var(--text-xs);
+  border-radius: var(--radius-full);
+}
+
+.btn--large {
+  height: 48px;
+  padding: 0 var(--space-5);
+  font-size: var(--text-base);
+  border-radius: var(--radius-md);
+}
+
+.btn--full {
+  width: 100%;
+}
+
+/* Spinner */
+.btn__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
