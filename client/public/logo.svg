@@ -1,20 +1,40 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#7C3AED"/>
-      <stop offset="100%" stop-color="#6D28D9"/>
+      <stop offset="0%" stop-color="#8B5CF6"/>
+      <stop offset="50%" stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#5B21B6"/>
     </linearGradient>
-    <linearGradient id="bolt" x1="220" y1="120" x2="300" y2="400" gradientUnits="userSpaceOnUse">
+    <linearGradient id="mark" x1="140" y1="140" x2="372" y2="372" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#FFFFFF"/>
-      <stop offset="100%" stop-color="#E0D4FC"/>
+      <stop offset="100%" stop-color="#DDD6FE"/>
+    </linearGradient>
+    <linearGradient id="spark" x1="256" y1="160" x2="256" y2="352" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FDE68A"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
     </linearGradient>
   </defs>
-  <!-- Rounded square background -->
+
+  <!-- Background -->
   <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <!-- Subtle inner glow -->
-  <rect x="16" y="16" width="480" height="480" rx="96" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/>
-  <!-- Camera aperture circle (subtle) -->
-  <circle cx="256" cy="256" r="140" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="24"/>
-  <!-- Lightning bolt — the snap -->
-  <path d="M280 128L200 272H260L232 384L320 232H256L280 128Z" fill="url(#bolt)"/>
+
+  <!-- Viewfinder corners — representing "snap/capture" -->
+  <!-- Top-left corner -->
+  <path d="M152 192V168C152 157 161 148 172 148H196" stroke="url(#mark)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Top-right corner -->
+  <path d="M316 148H340C351 148 360 157 360 168V192" stroke="url(#mark)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Bottom-left corner -->
+  <path d="M152 320V344C152 355 161 364 172 364H196" stroke="url(#mark)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Bottom-right corner -->
+  <path d="M316 364H340C351 364 360 355 360 344V320" stroke="url(#mark)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Center spark — the "snap" moment -->
+  <!-- Main diamond -->
+  <path d="M256 200L276 244H256H236L256 200Z" fill="url(#spark)"/>
+  <path d="M256 312L236 268H256H276L256 312Z" fill="url(#spark)"/>
+  <path d="M200 256L244 236V256V276L200 256Z" fill="url(#spark)"/>
+  <path d="M312 256L268 276V256V236L312 256Z" fill="url(#spark)"/>
+
+  <!-- Center dot -->
+  <circle cx="256" cy="256" r="16" fill="#FFFFFF"/>
 </svg>
