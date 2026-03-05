@@ -86,6 +86,9 @@ export default function Settings() {
         <button className="settings__privacy-link" onClick={() => navigate('/privacy')}>
           Privacy Policy
         </button>
+        <button className="settings__privacy-link" onClick={() => navigate('/terms')}>
+          Terms of Service
+        </button>
       </div>
     </div>
   );

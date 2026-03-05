@@ -7,6 +7,7 @@ import Activity from './pages/Activity';
 import Notes from './pages/Notes';
 import Settings from './pages/Settings';
 import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
             <Route path="/activity" element={<Activity />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
           </Routes>
         </AppShell>
       </AuthProvider>
