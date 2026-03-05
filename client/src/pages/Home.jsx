@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Mic, MicOff, Image, Camera, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useClassify } from '../hooks/useClassify';
@@ -178,6 +178,13 @@ export default function Home() {
           <button className="home__connect-btn" onClick={login}>Connect</button>
         </div>
       )}
+
+      {/* Footer links */}
+      <div className="home__footer">
+        <Link to="/privacy">Privacy</Link>
+        <span>·</span>
+        <Link to="/terms">Terms</Link>
+      </div>
 
       {showCamera && (
         <CameraModal
