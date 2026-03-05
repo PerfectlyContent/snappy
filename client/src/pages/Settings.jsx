@@ -1,4 +1,5 @@
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import {
   LogOut, Calendar, HardDrive, Users, Check,
   ChevronRight, Shield
@@ -8,6 +9,7 @@ import './Settings.css';
 
 export default function Settings() {
   const { user, authenticated, login, logout } = useAuth();
+  const navigate = useNavigate();
 
   const services = [
     { icon: Calendar, label: 'Calendar', desc: 'Events and reminders' },
@@ -81,6 +83,9 @@ export default function Settings() {
           <Shield size={12} style={{ display: 'inline', verticalAlign: '-1px', marginRight: '4px' }} />
           Your data is processed securely and never stored on our servers.
         </p>
+        <button className="settings__privacy-link" onClick={() => navigate('/privacy')}>
+          Privacy Policy
+        </button>
       </div>
     </div>
   );

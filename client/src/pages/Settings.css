@@ -157,3 +157,18 @@
   color: var(--label-tertiary);
   line-height: 1.5;
 }
+
+.settings__privacy-link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  transition: opacity 160ms ease;
+}
+
+.settings__privacy-link:hover {
+  opacity: 0.7;
+}
