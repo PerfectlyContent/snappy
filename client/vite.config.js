@@ -12,6 +12,7 @@ export default defineConfig({
       '/drive': 'http://localhost:3001',
       '/contacts': 'http://localhost:3001',
       '/share': 'http://localhost:3001',
+      '/snap': 'http://localhost:3001',
       '/health': 'http://localhost:3001',
     },
   },
