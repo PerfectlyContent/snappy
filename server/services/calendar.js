@@ -1,30 +1,71 @@
 import { google } from 'googleapis';
 
+function normalizeTime(timeStr) {
+  if (!timeStr) return null;
+  // Strip whitespace and handle common formats
+  const t = timeStr.trim();
+  // Already HH:MM or HH:MM:SS
+  const match = t.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (match) {
+    const h = match[1].padStart(2, '0');
+    const m = match[2];
+    return `${h}:${m}`;
+  }
+  return null;
+}
+
+function parseEventDate(dateStr) {
+  if (!dateStr) return null;
+  const d = dateStr.trim();
+  // YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
+  // Try to parse other formats
+  const parsed = new Date(d);
+  if (!isNaN(parsed.getTime())) {
+    return parsed.toISOString().split('T')[0];
+  }
+  return null;
+}
+
 export async function createEvent(auth, eventData) {
   const calendar = google.calendar({ version: 'v3', auth });
 
-  const timeStr = eventData.time || '09:00';
-  const startDateTime = new Date(`${eventData.date}T${timeStr}:00`);
+  const date = parseEventDate(eventData.date);
+  if (!date) {
+    throw new Error(`Invalid or missing event date: "${eventData.date}"`);
+  }
+
+  const timeStr = normalizeTime(eventData.time) || '09:00';
+  const startDateTime = new Date(`${date}T${timeStr}:00`);
+  if (isNaN(startDateTime.getTime())) {
+    throw new Error(`Invalid start date/time: "${date}T${timeStr}:00"`);
+  }
+
   let endDateTime;
-  if (eventData.endTime) {
-    endDateTime = new Date(`${eventData.date}T${eventData.endTime}:00`);
-  } else {
+  const endTimeStr = normalizeTime(eventData.endTime);
+  if (endTimeStr) {
+    endDateTime = new Date(`${date}T${endTimeStr}:00`);
+  }
+  if (!endDateTime || isNaN(endDateTime.getTime())) {
     const durationMinutes = eventData.duration || 60;
     endDateTime = new Date(startDateTime.getTime() + durationMinutes * 60000);
   }
-  console.log('Creating event:', eventData.eventTitle, 'on', eventData.date, 'at', timeStr, '→', startDateTime.toISOString());
+
+  console.log('Creating event:', eventData.eventTitle || eventData.title, 'on', date, 'at', timeStr, '→', startDateTime.toISOString());
+
+  const timeZone = eventData.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
   const event = {
-    summary: eventData.eventTitle || eventData.title,
+    summary: eventData.eventTitle || eventData.title || 'Untitled Event',
     location: eventData.location || '',
     description: eventData.description || '',
     start: {
       dateTime: startDateTime.toISOString(),
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      timeZone,
     },
     end: {
       dateTime: endDateTime.toISOString(),
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      timeZone,
     },
     reminders: {
       useDefault: false,

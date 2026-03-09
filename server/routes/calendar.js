@@ -14,7 +14,7 @@ router.post('/event', requireAuth, async (req, res) => {
     const result = await createEvent(auth, req.body);
     res.json({ success: true, ...result });
   } catch (err) {
-    console.error('Calendar error:', err);
+    console.error('Calendar error:', err.message, err.response?.data || err.stack);
     res.status(500).json({ error: 'Failed to create event', message: err.message });
   }
 });
