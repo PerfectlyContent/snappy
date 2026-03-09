@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Calendar, FileText, User, Receipt, StickyNote,
@@ -48,6 +48,11 @@ export default function Result() {
   const [entered, setEntered] = useState(false);
   const [attendeeInput, setAttendeeInput] = useState('');
   const [sendInvites, setSendInvites] = useState(true);
+  const [contactSuggestions, setContactSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const suggestionsRef = useRef(null);
+  const searchTimeout = useRef(null);
 
   useEffect(() => {
     requestAnimationFrame(() => setEntered(true));
@@ -73,6 +78,34 @@ export default function Result() {
     }
     setImageUrl(storedImage);
   }, [navigate]);
+
+  const searchContacts = useCallback((query) => {
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    if (!authenticated) return;
+    searchTimeout.current = setTimeout(async () => {
+      setSuggestionsLoading(true);
+      try {
+        const res = await api.searchContacts(query);
+        setContactSuggestions(res.contacts || []);
+        setShowSuggestions(true);
+      } catch {
+        setContactSuggestions([]);
+      } finally {
+        setSuggestionsLoading(false);
+      }
+    }, 250);
+  }, [authenticated]);
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    function handleClick(e) {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   if (!result) return null;
 
@@ -402,28 +435,72 @@ export default function Result() {
                         ))}
                       </div>
                     )}
-                    <div className="result__attendee-input-row">
-                      <input
-                        className="result__field-input"
-                        type="email"
-                        value={attendeeInput}
-                        placeholder="Add email address"
-                        onChange={(e) => setAttendeeInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ',') {
-                            e.preventDefault();
-                            addAttendee(i);
+                    <div className="result__attendee-input-wrap" ref={suggestionsRef}>
+                      <div className="result__attendee-input-row">
+                        <input
+                          className="result__field-input"
+                          type="email"
+                          value={attendeeInput}
+                          placeholder="Search contacts or type email"
+                          onChange={(e) => {
+                            setAttendeeInput(e.target.value);
+                            searchContacts(e.target.value);
+                          }}
+                          onFocus={() => {
+                            if (contactSuggestions.length) setShowSuggestions(true);
+                            else searchContacts(attendeeInput);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ',') {
+                              e.preventDefault();
+                              addAttendee(i);
+                              setShowSuggestions(false);
+                            }
+                            if (e.key === 'Escape') setShowSuggestions(false);
+                          }}
+                        />
+                        <button
+                          className="result__attendee-add"
+                          onClick={() => { addAttendee(i); setShowSuggestions(false); }}
+                          disabled={!attendeeInput.trim()}
+                          aria-label="Add attendee"
+                        >
+                          Add
+                        </button>
+                      </div>
+                      {showSuggestions && contactSuggestions.length > 0 && (
+                        <div className="result__contact-suggestions">
+                          {contactSuggestions
+                            .filter(c => !(evt.attendees || []).includes(c.email))
+                            .map(contact => (
+                              <button
+                                key={contact.email}
+                                className="result__contact-suggestion"
+                                onClick={() => {
+                                  const updated = [...events];
+                                  const current = updated[i].attendees || [];
+                                  if (!current.includes(contact.email)) {
+                                    updated[i] = { ...updated[i], attendees: [...current, contact.email] };
+                                    setEditedData({ events: updated });
+                                  }
+                                  setAttendeeInput('');
+                                  setShowSuggestions(false);
+                                }}
+                              >
+                                <span className="result__contact-name">{contact.name || contact.email}</span>
+                                {contact.name && <span className="result__contact-email">{contact.email}</span>}
+                              </button>
+                            ))
                           }
-                        }}
-                      />
-                      <button
-                        className="result__attendee-add"
-                        onClick={() => addAttendee(i)}
-                        disabled={!attendeeInput.trim()}
-                        aria-label="Add attendee"
-                      >
-                        Add
-                      </button>
+                        </div>
+                      )}
+                      {showSuggestions && suggestionsLoading && (
+                        <div className="result__contact-suggestions">
+                          <div className="result__contact-suggestion result__contact-suggestion--loading">
+                            Searching contacts...
+                          </div>
+                        </div>
+                      )}
                     </div>
                     {(evt.attendees || []).length > 0 && (
                       <label className="result__invite-toggle">
