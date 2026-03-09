@@ -45,13 +45,9 @@ router.get('/status', (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Logout failed' });
-    }
-    res.clearCookie('connect.sid');
-    res.json({ success: true });
-  });
+  req.session = null;
+  res.clearCookie('snappy_session');
+  res.json({ success: true });
 });
 
 export default router;

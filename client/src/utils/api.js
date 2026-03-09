@@ -96,6 +96,8 @@ export const api = {
 
   getRecentContacts: () => request('/contacts/recent'),
 
+  searchContacts: (query) => request(`/contacts/search?q=${encodeURIComponent(query || '')}`),
+
   // Share
   composeMessage: (classificationData) =>
     request('/share/compose', {

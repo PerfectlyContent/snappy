@@ -338,6 +338,62 @@
   color: var(--label-quaternary);
 }
 
+/* Contact suggestions dropdown */
+.result__attendee-input-wrap {
+  position: relative;
+}
+
+.result__contact-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: var(--bg-primary);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: var(--space-1);
+}
+
+.result__contact-suggestion {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  transition: background var(--duration-fast);
+  border-bottom: 1px solid var(--separator);
+}
+
+.result__contact-suggestion:last-child {
+  border-bottom: none;
+}
+
+.result__contact-suggestion:hover {
+  background: var(--fill-tertiary);
+}
+
+.result__contact-suggestion--loading {
+  color: var(--label-tertiary);
+  font-size: var(--text-sm);
+  cursor: default;
+}
+
+.result__contact-name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--label-primary);
+}
+
+.result__contact-email {
+  font-size: var(--text-xs);
+  color: var(--label-tertiary);
+}
+
 .result__invite-toggle {
   display: flex;
   align-items: center;

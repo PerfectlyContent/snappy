@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
-import session from 'express-session';
+import cookieSession from 'cookie-session';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -35,17 +35,14 @@ if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
-// Session
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'snappy-dev-secret',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    sameSite: 'lax',
-  },
+// Session (cookie-based — survives server restarts / deploys)
+app.use(cookieSession({
+  name: 'snappy_session',
+  keys: [process.env.SESSION_SECRET || 'snappy-dev-secret'],
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  secure: process.env.NODE_ENV === 'production',
+  httpOnly: true,
+  sameSite: 'lax',
 }));
 
 // Serve static client build in production

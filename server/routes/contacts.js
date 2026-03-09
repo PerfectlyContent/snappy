@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { getAuthenticatedClient } from '../services/google-auth.js';
-import { createContact, getRecentContacts } from '../services/contacts.js';
+import { createContact, getRecentContacts, searchContacts } from '../services/contacts.js';
 
 const router = Router();
 
@@ -37,6 +37,24 @@ router.post('/create', requireAuth, async (req, res) => {
     }
     const detail = getGoogleErrorDetail(err);
     res.status(err.code || 500).json({ error: 'Failed to create contact', message: detail });
+  }
+});
+
+router.get('/search', requireAuth, async (req, res) => {
+  try {
+    const auth = getAuthenticatedClient(req.session);
+    if (!auth) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    const contacts = await searchContacts(auth, req.query.q || '');
+    res.json({ contacts });
+  } catch (err) {
+    console.error('Contact search error:', err.message);
+    if (isTokenExpiredError(err)) {
+      req.session.tokens = null;
+      return res.status(401).json({ error: 'Google session expired', reauth: true });
+    }
+    res.status(500).json({ error: 'Failed to search contacts', message: err.message });
   }
 });
 

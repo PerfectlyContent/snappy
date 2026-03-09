@@ -52,6 +52,9 @@ export async function createEvent(auth, eventData) {
   const endDateTimeStr = `${date}T${endTimeStr}:00`;
 
   console.log('Creating event:', eventData.eventTitle || eventData.title, 'on', date, 'at', timeStr, 'tz:', timeZone);
+  if (eventData.attendees?.length) {
+    console.log('Attendees:', eventData.attendees, '| sendInvites:', eventData.sendInvites);
+  }
 
   const event = {
     summary: eventData.eventTitle || eventData.title || 'Untitled Event',
@@ -82,7 +85,13 @@ export async function createEvent(auth, eventData) {
     }
   }
 
-  const sendUpdates = eventData.sendInvites && event.attendees?.length ? 'all' : 'none';
+  // sendUpdates controls email invitations; attendees are always added to the event
+  const sendUpdates = event.attendees?.length
+    ? (eventData.sendInvites !== false ? 'all' : 'none')
+    : 'none';
+  if (event.attendees?.length) {
+    console.log('Sending to Google Calendar with', event.attendees.length, 'attendees, sendUpdates:', sendUpdates);
+  }
 
   const res = await calendar.events.insert({
     calendarId: 'primary',
