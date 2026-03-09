@@ -5,12 +5,20 @@ import { createEvent, getUpcoming } from '../services/calendar.js';
 
 const router = Router();
 
-function isAuthError(err) {
-  const code = err.code || err.response?.status;
-  return code === 401 || code === 403
-    || err.message?.includes('invalid_grant')
-    || err.message?.includes('Token has been expired or revoked')
-    || err.message?.includes('No refresh token');
+function isTokenExpiredError(err) {
+  const msg = err.message || '';
+  return err.code === 401
+    || msg.includes('invalid_grant')
+    || msg.includes('Token has been expired or revoked')
+    || msg.includes('No refresh token');
+}
+
+function getGoogleErrorDetail(err) {
+  const detail = err.response?.data?.error;
+  if (typeof detail === 'object') {
+    return detail.message || detail.errors?.[0]?.message || err.message;
+  }
+  return err.message;
 }
 
 router.post('/event', requireAuth, async (req, res) => {
@@ -23,11 +31,12 @@ router.post('/event', requireAuth, async (req, res) => {
     res.json({ success: true, ...result });
   } catch (err) {
     console.error('Calendar error:', err.message, err.code, err.response?.data || err.stack);
-    if (isAuthError(err)) {
+    if (isTokenExpiredError(err)) {
       req.session.tokens = null;
       return res.status(401).json({ error: 'Google session expired', message: 'Your Google session has expired. Please reconnect your account.', reauth: true });
     }
-    res.status(500).json({ error: 'Failed to create event', message: err.message });
+    const detail = getGoogleErrorDetail(err);
+    res.status(err.code || 500).json({ error: 'Failed to create event', message: detail });
   }
 });
 
@@ -38,11 +47,12 @@ router.get('/upcoming', requireAuth, async (req, res) => {
     res.json({ events });
   } catch (err) {
     console.error('Calendar fetch error:', err.message, err.code, err.response?.data || err.stack);
-    if (isAuthError(err)) {
+    if (isTokenExpiredError(err)) {
       req.session.tokens = null;
       return res.status(401).json({ error: 'Google session expired', message: 'Your Google session has expired. Please reconnect your account.', reauth: true });
     }
-    res.status(500).json({ error: 'Failed to fetch events', message: err.message });
+    const detail = getGoogleErrorDetail(err);
+    res.status(err.code || 500).json({ error: 'Failed to fetch events', message: detail });
   }
 });
 
