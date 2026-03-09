@@ -36,35 +36,33 @@ export async function createEvent(auth, eventData) {
   }
 
   const timeStr = normalizeTime(eventData.time) || '09:00';
-  const startDateTime = new Date(`${date}T${timeStr}:00`);
-  if (isNaN(startDateTime.getTime())) {
-    throw new Error(`Invalid start date/time: "${date}T${timeStr}:00"`);
-  }
+  const timeZone = eventData.timeZone || 'UTC';
 
-  let endDateTime;
-  const endTimeStr = normalizeTime(eventData.endTime);
-  if (endTimeStr) {
-    endDateTime = new Date(`${date}T${endTimeStr}:00`);
-  }
-  if (!endDateTime || isNaN(endDateTime.getTime())) {
+  let endTimeStr = normalizeTime(eventData.endTime);
+  if (!endTimeStr) {
+    // Default to 1 hour after start
     const durationMinutes = eventData.duration || 60;
-    endDateTime = new Date(startDateTime.getTime() + durationMinutes * 60000);
+    const [h, m] = timeStr.split(':').map(Number);
+    const totalMin = h * 60 + m + durationMinutes;
+    endTimeStr = `${String(Math.floor(totalMin / 60) % 24).padStart(2, '0')}:${String(totalMin % 60).padStart(2, '0')}`;
   }
 
-  console.log('Creating event:', eventData.eventTitle || eventData.title, 'on', date, 'at', timeStr, '→', startDateTime.toISOString());
+  // Send local time directly to Google — no Date object conversion
+  const startDateTimeStr = `${date}T${timeStr}:00`;
+  const endDateTimeStr = `${date}T${endTimeStr}:00`;
 
-  const timeZone = eventData.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  console.log('Creating event:', eventData.eventTitle || eventData.title, 'on', date, 'at', timeStr, 'tz:', timeZone);
 
   const event = {
     summary: eventData.eventTitle || eventData.title || 'Untitled Event',
     location: eventData.location || '',
     description: eventData.description || '',
     start: {
-      dateTime: startDateTime.toISOString(),
+      dateTime: startDateTimeStr,
       timeZone,
     },
     end: {
-      dateTime: endDateTime.toISOString(),
+      dateTime: endDateTimeStr,
       timeZone,
     },
     reminders: {

@@ -114,8 +114,9 @@ export default function Result() {
       let link = null;
 
       if (type === 'calendar') {
+        const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const evts = editedData.events || [editedData];
-        const results = await Promise.all(evts.map(evt => api.createEvent(evt)));
+        const results = await Promise.all(evts.map(evt => api.createEvent({ ...evt, timeZone: userTz })));
         link = results[0]?.htmlLink;
         if (evts.length > 1) {
           setToast({ message: `${evts.length} events saved to Calendar`, type: 'success' });
