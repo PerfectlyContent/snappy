@@ -8,6 +8,9 @@ const router = Router();
 router.post('/create', requireAuth, async (req, res) => {
   try {
     const auth = getAuthenticatedClient(req.session);
+    if (!auth) {
+      return res.status(401).json({ error: 'Not authenticated', message: 'Google session expired. Please reconnect.' });
+    }
     const result = await createContact(auth, req.body);
     res.json({ success: true, ...result });
   } catch (err) {

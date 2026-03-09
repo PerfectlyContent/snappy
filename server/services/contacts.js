@@ -16,7 +16,10 @@ export async function createContact(auth, contactData) {
     biographies: [{ value: 'Added by Snappy', contentType: 'TEXT_PLAIN' }],
   };
 
-  const res = await people.people.createContact({ requestBody: person });
+  const res = await people.people.createContact({
+    requestBody: person,
+    personFields: 'names,emailAddresses,phoneNumbers,organizations,urls,addresses,biographies',
+  });
 
   const contactId = res.data.resourceName?.replace('people/', '');
   return {
