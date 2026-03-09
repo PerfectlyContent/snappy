@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Calendar, FileText, User, Receipt, StickyNote,
-  Save, Send, ChevronDown, ChevronUp, ExternalLink, AlertTriangle
+  Save, Send, ChevronDown, ChevronUp, ExternalLink, AlertTriangle,
+  UserPlus, X, Mail
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
@@ -45,6 +46,8 @@ export default function Result() {
   const [toast, setToast] = useState(null);
   const [manualType, setManualType] = useState(null);
   const [entered, setEntered] = useState(false);
+  const [attendeeInput, setAttendeeInput] = useState('');
+  const [sendInvites, setSendInvites] = useState(true);
 
   useEffect(() => {
     requestAnimationFrame(() => setEntered(true));
@@ -83,6 +86,27 @@ export default function Result() {
     setEditedData(prev => ({ ...prev, [key]: value }));
   }
 
+  function addAttendee(eventIndex) {
+    const email = attendeeInput.trim().toLowerCase();
+    if (!email || !email.includes('@')) return;
+    const updated = [...events];
+    const current = updated[eventIndex].attendees || [];
+    if (!current.includes(email)) {
+      updated[eventIndex] = { ...updated[eventIndex], attendees: [...current, email] };
+      setEditedData({ events: updated });
+    }
+    setAttendeeInput('');
+  }
+
+  function removeAttendee(eventIndex, email) {
+    const updated = [...events];
+    updated[eventIndex] = {
+      ...updated[eventIndex],
+      attendees: (updated[eventIndex].attendees || []).filter(e => e !== email),
+    };
+    setEditedData({ events: updated });
+  }
+
   async function handleSave() {
     // Notes save locally — no Google auth needed
     if (type === 'note') {
@@ -116,7 +140,7 @@ export default function Result() {
       if (type === 'calendar') {
         const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const evts = editedData.events || [editedData];
-        const results = await Promise.all(evts.map(evt => api.createEvent({ ...evt, timeZone: userTz })));
+        const results = await Promise.all(evts.map(evt => api.createEvent({ ...evt, timeZone: userTz, sendInvites })));
         link = results[0]?.htmlLink;
         if (evts.length > 1) {
           setToast({ message: `${evts.length} events saved to Calendar`, type: 'success' });
@@ -356,6 +380,62 @@ export default function Result() {
                         setEditedData({ events: updated });
                       }}
                     />
+                  </div>
+                  <div className="result__field result__attendees-field">
+                    <label className="result__field-label">
+                      <UserPlus size={12} />
+                      Attendees
+                    </label>
+                    {(evt.attendees || []).length > 0 && (
+                      <div className="result__attendee-chips">
+                        {evt.attendees.map(email => (
+                          <span key={email} className="result__attendee-chip">
+                            {email}
+                            <button
+                              className="result__attendee-remove"
+                              onClick={() => removeAttendee(i, email)}
+                              aria-label={`Remove ${email}`}
+                            >
+                              <X size={12} />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="result__attendee-input-row">
+                      <input
+                        className="result__field-input"
+                        type="email"
+                        value={attendeeInput}
+                        placeholder="Add email address"
+                        onChange={(e) => setAttendeeInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ',') {
+                            e.preventDefault();
+                            addAttendee(i);
+                          }
+                        }}
+                      />
+                      <button
+                        className="result__attendee-add"
+                        onClick={() => addAttendee(i)}
+                        disabled={!attendeeInput.trim()}
+                        aria-label="Add attendee"
+                      >
+                        Add
+                      </button>
+                    </div>
+                    {(evt.attendees || []).length > 0 && (
+                      <label className="result__invite-toggle">
+                        <input
+                          type="checkbox"
+                          checked={sendInvites}
+                          onChange={(e) => setSendInvites(e.target.checked)}
+                        />
+                        <Mail size={14} />
+                        <span>Send invite emails to attendees</span>
+                      </label>
+                    )}
                   </div>
                 </div>
               ))

@@ -82,9 +82,12 @@ export async function createEvent(auth, eventData) {
     }
   }
 
+  const sendUpdates = eventData.sendInvites && event.attendees?.length ? 'all' : 'none';
+
   const res = await calendar.events.insert({
     calendarId: 'primary',
     requestBody: event,
+    sendUpdates,
   });
 
   return {
