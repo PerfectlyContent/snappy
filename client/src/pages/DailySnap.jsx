@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Sun, Cloud, Sparkles, Calendar, StickyNote,
   MapPin, Clock, RefreshCw, LogIn, ChevronRight,
+  Lightbulb, Link2, Bell, Zap,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
@@ -79,7 +80,7 @@ export default function DailySnap() {
     try {
       const notes = JSON.parse(localStorage.getItem(NOTES_KEY) || '[]');
       const notesParam = encodeURIComponent(JSON.stringify(
-        notes.slice(0, 10).map(n => ({ title: n.title, content: n.content }))
+        notes.slice(0, 10).map(n => ({ title: n.title, content: n.content, source: n.source || 'typed' }))
       ));
       const data = await api.getDailySnap(notesParam);
       setSnap(data);
@@ -195,6 +196,33 @@ export default function DailySnap() {
               )}
             </div>
           </Card>
+
+          {/* Nudges */}
+          {snap.nudges?.length > 0 && (
+            <div className="dsnap__nudges">
+              <div className="dsnap__section-header">
+                <Lightbulb size={16} />
+                <span>Nudges</span>
+              </div>
+              <div className="dsnap__nudges-list">
+                {snap.nudges.map((nudge, i) => (
+                  <div key={i} className={`dsnap__nudge dsnap__nudge--${nudge.type}`}>
+                    <div className="dsnap__nudge-icon">
+                      {nudge.type === 'connection' ? <Link2 size={14} /> :
+                       nudge.type === 'reminder' ? <Bell size={14} /> :
+                       <Zap size={14} />}
+                    </div>
+                    <div className="dsnap__nudge-body">
+                      <p className="dsnap__nudge-text">{nudge.text}</p>
+                      {nudge.noteTitle && (
+                        <span className="dsnap__nudge-source">From note: {nudge.noteTitle}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Timeline */}
           <div className="dsnap__section">

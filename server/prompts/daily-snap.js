@@ -8,24 +8,41 @@ Here is the user's data for today:
 CALENDAR EVENTS:
 {{EVENTS}}
 
-PERSONAL NOTES:
+PERSONAL NOTES (includes voice notes and typed notes):
 {{NOTES}}
 
-Generate a daily snap — a brief, warm overview of the user's day. Return valid JSON with this exact structure:
+Generate a daily snap — a brief, warm overview of the user's day. You must also generate smart nudges by cross-referencing the notes with calendar events and the current date.
+
+Return valid JSON with this exact structure:
 
 \`\`\`json
 {
   "greeting": "A short, time-aware greeting (e.g. 'Good morning' / 'Good afternoon'). Keep it to 3-5 words.",
   "summary": "A 2-3 sentence overview of how the day looks. Be warm but concise. Mention how many events they have, highlight anything notable (back-to-back meetings, free blocks, important-sounding events). If they have notes, weave in a gentle reminder.",
   "dayType": "busy | moderate | light | free",
-  "focusHint": "One short sentence suggesting what to focus on or enjoy today based on the schedule and notes. Be encouraging, not prescriptive."
+  "focusHint": "One short sentence suggesting what to focus on or enjoy today based on the schedule and notes. Be encouraging, not prescriptive.",
+  "nudges": [
+    {
+      "text": "The nudge message — short, actionable, and warm.",
+      "type": "connection | reminder | suggestion",
+      "noteTitle": "Title of the related note, if any (null otherwise)"
+    }
+  ]
 }
 \`\`\`
 
+Nudge types:
+- "connection": A note is relevant to a calendar event today (e.g. "You noted 'prepare slides' — your Design Review is at 2pm")
+- "reminder": A note contains something time-sensitive or actionable for today (e.g. "Don't forget: you mentioned picking up the prescription")
+- "suggestion": A helpful insight based on the day's shape (e.g. "You have a 2-hour gap after lunch — good time to work on that blog post you noted")
+
 Rules:
-- If there are no events and no notes, be encouraging about the open day ahead.
+- Generate 0-3 nudges. Only include genuinely useful ones — never force a nudge.
+- Nudges from voice notes (marked [voice]) deserve slight priority — the user spoke them aloud, so they felt important.
+- If there are no events and no notes, return an empty nudges array and be encouraging about the open day.
 - Never invent events or notes that don't exist in the data.
 - Keep the tone calm, helpful, and human — like a thoughtful friend glancing at your day.
 - The summary should feel effortless to read in under 10 seconds.
+- Nudges should be short (under 20 words) and conversational, not robotic.
 - dayType should reflect the actual density: 0 events = "free", 1-2 = "light", 3-4 = "moderate", 5+ = "busy".
 `;

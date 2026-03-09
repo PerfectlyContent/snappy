@@ -91,7 +91,7 @@ export default function Result() {
 
       // Save to dedicated notes storage
       const notes = JSON.parse(localStorage.getItem('snappy_notes') || '[]');
-      notes.unshift({ id: noteId, title: editedData.title || 'Untitled', content: editedData.content || '', timestamp: ts });
+      notes.unshift({ id: noteId, title: editedData.title || 'Untitled', content: editedData.content || '', source: 'voice', timestamp: ts });
       localStorage.setItem('snappy_notes', JSON.stringify(notes));
 
       // Also save to activity history
