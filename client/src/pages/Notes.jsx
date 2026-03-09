@@ -27,10 +27,13 @@ export default function Notes() {
   const [entered, setEntered] = useState(false);
   const titleRef = useRef(null);
 
+  const [voiceSource, setVoiceSource] = useState(false);
+
   const handleVoiceComplete = useCallback((text) => {
     setComposing(true);
     setContent(text);
     setTitle('');
+    setVoiceSource(true);
   }, []);
 
   const handleVoiceError = useCallback((message) => {
@@ -60,6 +63,7 @@ export default function Notes() {
       id: Date.now().toString(36),
       title: title.trim() || 'Untitled',
       content: content.trim(),
+      source: voiceSource ? 'voice' : 'typed',
       timestamp: new Date().toISOString(),
     };
 
@@ -69,6 +73,7 @@ export default function Notes() {
     setTitle('');
     setContent('');
     setComposing(false);
+    setVoiceSource(false);
     setToast({ message: 'Note saved', type: 'success' });
   }
 
