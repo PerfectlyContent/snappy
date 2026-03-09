@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth } from '../middleware/auth.js';
+import { requireScope } from '../middleware/auth.js';
 import { getAuthenticatedClient } from '../services/google-auth.js';
 import { createContact, getRecentContacts, searchContacts } from '../services/contacts.js';
 
@@ -21,7 +21,7 @@ function getGoogleErrorDetail(err) {
   return err.message;
 }
 
-router.post('/create', requireAuth, async (req, res) => {
+router.post('/create', requireScope('contacts'), async (req, res) => {
   try {
     const auth = getAuthenticatedClient(req.session);
     if (!auth) {
@@ -40,7 +40,7 @@ router.post('/create', requireAuth, async (req, res) => {
   }
 });
 
-router.get('/search', requireAuth, async (req, res) => {
+router.get('/search', requireScope('contacts'), async (req, res) => {
   try {
     const auth = getAuthenticatedClient(req.session);
     if (!auth) {
@@ -58,7 +58,7 @@ router.get('/search', requireAuth, async (req, res) => {
   }
 });
 
-router.get('/recent', requireAuth, async (req, res) => {
+router.get('/recent', requireScope('contacts'), async (req, res) => {
   try {
     const auth = getAuthenticatedClient(req.session);
     const contacts = await getRecentContacts(auth);

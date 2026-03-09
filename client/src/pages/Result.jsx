@@ -33,7 +33,7 @@ const TYPE_ACTIONS = {
 
 export default function Result() {
   const navigate = useNavigate();
-  const { authenticated, login } = useAuth();
+  const { authenticated, login, requestScope } = useAuth();
   const [result, setResult] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
   const [expanded, setExpanded] = useState(true);
@@ -209,6 +209,10 @@ export default function Result() {
       });
       localStorage.setItem('snappy_activity', JSON.stringify(activity.slice(0, 50)));
     } catch (err) {
+      if (err.scopeRequired) {
+        requestScope(err.feature);
+        return;
+      }
       if (err.reauth) {
         setToast({ message: 'Session expired — please reconnect Google', type: 'error' });
         return;
