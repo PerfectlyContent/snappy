@@ -13,7 +13,11 @@ async function request(path, options = {}) {
   const data = await res.json();
 
   if (!res.ok) {
-    throw new Error(data.error || data.message || 'Request failed');
+    const err = new Error(data.message || data.error || 'Request failed');
+    if (res.status === 401 || data.reauth) {
+      err.reauth = true;
+    }
+    throw err;
   }
 
   return data;

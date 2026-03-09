@@ -151,6 +151,11 @@ export default function Result() {
       });
       localStorage.setItem('snappy_activity', JSON.stringify(activity.slice(0, 50)));
     } catch (err) {
+      if (err.reauth) {
+        setToast({ message: 'Google session expired — reconnecting…', type: 'error' });
+        setTimeout(() => login(), 1500);
+        return;
+      }
       setToast({ message: err.message, type: 'error' });
     } finally {
       setSaving(false);
