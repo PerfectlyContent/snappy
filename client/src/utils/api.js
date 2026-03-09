@@ -114,4 +114,8 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ contactData, channel }),
     }),
+
+  // Daily Snap
+  getDailySnap: (notesParam = '') =>
+    request(`/snap/daily${notesParam ? `?notes=${notesParam}` : ''}`),
 };

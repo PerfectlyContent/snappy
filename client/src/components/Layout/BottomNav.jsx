@@ -1,9 +1,10 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Camera, StickyNote, Clock, Settings } from 'lucide-react';
+import { Camera, Sparkles, StickyNote, Clock, Settings } from 'lucide-react';
 import './BottomNav.css';
 
 const NAV_ITEMS = [
   { path: '/', icon: Camera, label: 'Snap' },
+  { path: '/daily', icon: Sparkles, label: 'My Day' },
   { path: '/notes', icon: StickyNote, label: 'Notes' },
   { path: '/activity', icon: Clock, label: 'Activity' },
   { path: '/settings', icon: Settings, label: 'Settings' },

@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import Result from './pages/Result';
 import Activity from './pages/Activity';
 import Notes from './pages/Notes';
+import DailySnap from './pages/DailySnap';
 import Settings from './pages/Settings';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
@@ -17,6 +18,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/result" element={<Result />} />
+            <Route path="/daily" element={<DailySnap />} />
             <Route path="/notes" element={<Notes />} />
             <Route path="/activity" element={<Activity />} />
             <Route path="/settings" element={<Settings />} />

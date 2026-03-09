@@ -14,6 +14,7 @@ import calendarRoutes from './routes/calendar.js';
 import driveRoutes from './routes/drive.js';
 import contactsRoutes from './routes/contacts.js';
 import shareRoutes from './routes/share.js';
+import snapRoutes from './routes/snap.js';
 import healthRoutes from './routes/health.js';
 
 const app = express();
@@ -59,6 +60,7 @@ app.use('/calendar', calendarRoutes);
 app.use('/drive', driveRoutes);
 app.use('/contacts', contactsRoutes);
 app.use('/share', shareRoutes);
+app.use('/snap', snapRoutes);
 app.use('/health', healthRoutes);
 
 // SPA fallback in production
