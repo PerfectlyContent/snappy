@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireScope } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.js';
 import { upload } from '../middleware/upload.js';
 import { getAuthenticatedClient } from '../services/google-auth.js';
 import { uploadFile, listFolders } from '../services/drive.js';
@@ -22,7 +22,7 @@ function getGoogleErrorDetail(err) {
   return err.message;
 }
 
-router.post('/upload', requireScope('drive'), upload.single('file'), async (req, res) => {
+router.post('/upload', requireAuth, upload.single('file'), async (req, res) => {
   try {
     const auth = getAuthenticatedClient(req.session);
     let buffer, mimeType, fileName;
@@ -59,7 +59,7 @@ router.post('/upload', requireScope('drive'), upload.single('file'), async (req,
   }
 });
 
-router.get('/folders', requireScope('drive'), async (req, res) => {
+router.get('/folders', requireAuth, async (req, res) => {
   try {
     const auth = getAuthenticatedClient(req.session);
     const folders = await listFolders(auth);

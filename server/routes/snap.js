@@ -1,17 +1,15 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
-import { getAuthenticatedClient } from '../services/google-auth.js';
-import { getTodayEvents } from '../services/calendar.js';
 import { generateDailySnap } from '../services/gemini.js';
 
 const router = Router();
 
 router.get('/daily', requireAuth, async (req, res) => {
   try {
-    const auth = getAuthenticatedClient(req.session);
-    const events = await getTodayEvents(auth);
+    // Calendar events are no longer fetched server-side (no sensitive scopes).
+    // The snap is generated from notes only.
+    const events = [];
 
-    // Notes are stored client-side, so the client sends them as a query param
     let notes = [];
     if (req.query.notes) {
       try {

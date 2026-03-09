@@ -17,11 +17,6 @@ async function request(path, options = {}) {
     if (res.status === 401 || data.reauth) {
       err.reauth = true;
     }
-    if (data.error === 'scope_required') {
-      err.scopeRequired = true;
-      err.feature = data.feature;
-      err.authUrl = data.authUrl;
-    }
     throw err;
   }
 
@@ -80,15 +75,7 @@ export const api = {
       body: formData,
     });
     const data = await res.json();
-    if (!res.ok) {
-      const err = new Error(data.error || 'Upload failed');
-      if (data.error === 'scope_required') {
-        err.scopeRequired = true;
-        err.feature = data.feature;
-        err.authUrl = data.authUrl;
-      }
-      throw err;
-    }
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
     return data;
   },
 

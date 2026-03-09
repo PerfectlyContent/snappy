@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireScope } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.js';
 import { getAuthenticatedClient } from '../services/google-auth.js';
 import { createEvent, getUpcoming } from '../services/calendar.js';
 
@@ -21,7 +21,7 @@ function getGoogleErrorDetail(err) {
   return err.message;
 }
 
-router.post('/event', requireScope('calendar'), async (req, res) => {
+router.post('/event', requireAuth, async (req, res) => {
   try {
     const auth = getAuthenticatedClient(req.session);
     if (!auth) {
@@ -40,7 +40,7 @@ router.post('/event', requireScope('calendar'), async (req, res) => {
   }
 });
 
-router.get('/upcoming', requireScope('calendar'), async (req, res) => {
+router.get('/upcoming', requireAuth, async (req, res) => {
   try {
     const auth = getAuthenticatedClient(req.session);
     const events = await getUpcoming(auth);
