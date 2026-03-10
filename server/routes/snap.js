@@ -1,14 +1,23 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { generateDailySnap } from '../services/gemini.js';
+import { getAuthenticatedClient } from '../services/google-auth.js';
+import { getTodayEvents } from '../services/calendar.js';
 
 const router = Router();
 
 router.get('/daily', requireAuth, async (req, res) => {
   try {
-    // Calendar events are no longer fetched server-side (no sensitive scopes).
-    // The snap is generated from notes only.
-    const events = [];
+    // Fetch today's Google Calendar events if the user signed in with Google
+    let events = [];
+    if (req.session.provider === 'google' && req.session.tokens) {
+      try {
+        const auth = getAuthenticatedClient(req.session);
+        events = await getTodayEvents(auth);
+      } catch (err) {
+        console.warn('Could not fetch calendar events for daily snap:', err.message);
+      }
+    }
 
     let notes = [];
     if (req.query.notes) {

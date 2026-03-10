@@ -3,6 +3,7 @@ import { google } from 'googleapis';
 const SCOPES = [
   'https://www.googleapis.com/auth/userinfo.email',
   'https://www.googleapis.com/auth/userinfo.profile',
+  'https://www.googleapis.com/auth/calendar.events.readonly',
 ];
 
 export function createOAuth2Client() {
