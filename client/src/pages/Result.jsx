@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Calendar, FileText, User, Receipt, StickyNote,
-  Save, Send, ChevronDown, ChevronUp, ExternalLink, AlertTriangle,
+  Save, Share2, ChevronDown, ChevronUp, ExternalLink, AlertTriangle,
   UserPlus, X, Archive, Download, Ticket, CookingPot, Pill,
-  Package, PenLine, Monitor
+  Package, PenLine, Monitor, Send
 } from 'lucide-react';
 import { buildCalendarUrl, buildContactUrl, downloadIcsFile, downloadVCard, downloadImage } from '../utils/export';
 import { saveItem } from '../utils/storage';
@@ -12,7 +12,7 @@ import Card from '../components/Common/Card';
 import Button from '../components/Common/Button';
 import Badge from '../components/Common/Badge';
 import Toast from '../components/Common/Toast';
-import ForwardModal from '../components/Actions/ForwardModal';
+import ShareModal from '../components/Actions/ShareModal';
 import ReachOutModal from '../components/Actions/ReachOutModal';
 import './Result.css';
 
@@ -53,7 +53,7 @@ export default function Result() {
   const [saved, setSaved] = useState(false);
   const [savedLink, setSavedLink] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [showForward, setShowForward] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const [showReachOut, setShowReachOut] = useState(false);
   const [toast, setToast] = useState(null);
   const [manualType, setManualType] = useState(null);
@@ -521,23 +521,23 @@ export default function Result() {
             <Button
               variant="secondary"
               fullWidth
-              icon={Send}
-              onClick={() => setShowForward(true)}
+              icon={Share2}
+              onClick={() => setShowShare(true)}
               disabled={saving}
             >
-              Forward to Someone
+              Share
             </Button>
           </>
         )}
       </div>
 
-      {showForward && (
-        <ForwardModal
+      {showShare && (
+        <ShareModal
           classificationData={{ type, data: editedData }}
-          onClose={() => setShowForward(false)}
+          onClose={() => setShowShare(false)}
           onSent={() => {
-            setShowForward(false);
-            setToast({ message: 'Message sent!', type: 'success' });
+            setShowShare(false);
+            setToast({ message: 'Shared!', type: 'success' });
           }}
         />
       )}
