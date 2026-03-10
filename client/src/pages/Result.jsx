@@ -59,6 +59,7 @@ export default function Result() {
   const [manualType, setManualType] = useState(null);
   const [entered, setEntered] = useState(false);
   const [attendeeInput, setAttendeeInput] = useState('');
+  const [imageExpanded, setImageExpanded] = useState(false);
 
   useEffect(() => {
     requestAnimationFrame(() => setEntered(true));
@@ -230,11 +231,19 @@ export default function Result() {
         </button>
       </div>
 
-      {/* Image preview */}
+      {/* Image preview — collapsible */}
       {imageUrl && (
-        <div className="result__image-wrap">
-          <img src={imageUrl} alt="Screenshot" className="result__image" />
-        </div>
+        <button
+          className={`result__image-wrap ${imageExpanded ? 'result__image-wrap--expanded' : ''}`}
+          onClick={() => setImageExpanded(!imageExpanded)}
+          aria-expanded={imageExpanded}
+          aria-label={imageExpanded ? 'Collapse image' : 'Expand image'}
+        >
+          <img src={imageUrl} alt="Snapped image" className="result__image" />
+          <span className="result__image-hint">
+            {imageExpanded ? 'Tap to collapse' : 'Tap to view'}
+          </span>
+        </button>
       )}
 
       {/* Classification header */}
