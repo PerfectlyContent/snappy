@@ -102,6 +102,30 @@
   background: rgba(234, 179, 8, 0.08);
   color: #CA8A04;
 }
+.result__type-icon-wrap[data-type="ticket"] {
+  background: rgba(236, 72, 153, 0.08);
+  color: #DB2777;
+}
+.result__type-icon-wrap[data-type="recipe"] {
+  background: rgba(239, 68, 68, 0.08);
+  color: #DC2626;
+}
+.result__type-icon-wrap[data-type="prescription"] {
+  background: rgba(20, 184, 166, 0.08);
+  color: #0D9488;
+}
+.result__type-icon-wrap[data-type="product"] {
+  background: rgba(99, 102, 241, 0.08);
+  color: #4F46E5;
+}
+.result__type-icon-wrap[data-type="handwriting"] {
+  background: rgba(245, 158, 11, 0.08);
+  color: #B45309;
+}
+.result__type-icon-wrap[data-type="screenshot"] {
+  background: rgba(100, 116, 139, 0.08);
+  color: #475569;
+}
 
 .result__type-info {
   flex: 1;
