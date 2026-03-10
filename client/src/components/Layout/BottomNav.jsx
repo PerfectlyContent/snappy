@@ -14,8 +14,6 @@ export default function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  if (location.pathname.startsWith('/result')) return null;
-
   return (
     <nav className="btmnav" aria-label="Tab navigation">
       <div className="btmnav__inner">
