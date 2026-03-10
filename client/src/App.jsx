@@ -1,5 +1,5 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import AppShell from './components/Layout/AppShell';
 import Welcome from './pages/Welcome';
 import Home from './pages/Home';
@@ -13,10 +13,18 @@ import Terms from './pages/Terms';
 
 function AppRoutes() {
   const location = useLocation();
+  const { authenticated, loading } = useAuth();
   const isWelcome = location.pathname === '/welcome';
+
+  if (loading) return null;
 
   if (isWelcome) {
     return <Welcome />;
+  }
+
+  // Redirect unauthenticated users to Welcome page
+  if (!authenticated && location.pathname === '/') {
+    return <Navigate to="/welcome" replace />;
   }
 
   return (
