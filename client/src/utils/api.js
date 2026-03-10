@@ -54,15 +54,6 @@ export const api = {
       body: JSON.stringify({ transcript }),
     }),
 
-  // Calendar
-  createEvent: (eventData) =>
-    request('/calendar/event', {
-      method: 'POST',
-      body: JSON.stringify(eventData),
-    }),
-
-  getUpcomingEvents: () => request('/calendar/upcoming'),
-
   // Drive
   uploadToDrive: async (file, classificationType, fileName) => {
     const formData = new FormData();
