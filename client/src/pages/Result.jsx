@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Calendar, FileText, User, Receipt, StickyNote,
   Save, Send, ChevronDown, ChevronUp, ExternalLink, AlertTriangle,
-  UserPlus, X, Archive, Download, Ticket, CookingPot, Pill,
-  Package, PenLine, Monitor
+  UserPlus, X, Archive, Download
 } from 'lucide-react';
 import { buildCalendarUrl, downloadIcsFile, downloadVCard, downloadImage } from '../utils/export';
 import { saveItem } from '../utils/storage';
@@ -22,12 +21,6 @@ const TYPE_ICONS = {
   contact: User,
   document: FileText,
   note: StickyNote,
-  ticket: Ticket,
-  recipe: CookingPot,
-  prescription: Pill,
-  product: Package,
-  handwriting: PenLine,
-  screenshot: Monitor,
 };
 
 const TYPE_ACTIONS = {
@@ -36,12 +29,6 @@ const TYPE_ACTIONS = {
   contact: 'Save Contact',
   document: 'Save Document',
   note: 'Save Note',
-  ticket: 'Save Ticket',
-  recipe: 'Save Recipe',
-  prescription: 'Save Prescription',
-  product: 'Save Product',
-  handwriting: 'Save Note',
-  screenshot: 'Save Screenshot',
 };
 
 export default function Result() {
@@ -246,7 +233,7 @@ export default function Result() {
             <h2 className="result__type-title">
               {events.length > 1
                 ? `${events.length} Events Found`
-                : events[0]?.eventTitle || editedData.eventTitle || editedData.vendor || editedData.name || editedData.subject || editedData.title || editedData.medication || editedData.app || 'Classified Item'}
+                : events[0]?.eventTitle || editedData.eventTitle || editedData.vendor || editedData.name || editedData.subject || editedData.title || 'Classified Item'}
             </h2>
           </div>
         </div>
@@ -259,7 +246,7 @@ export default function Result() {
         )}
 
         <div className="result__type-options">
-          {['calendar', 'receipt', 'contact', 'document', 'note', 'ticket', 'recipe', 'prescription', 'product', 'handwriting', 'screenshot'].map(t => (
+          {['calendar', 'receipt', 'contact', 'document', 'note'].map(t => (
             <button
               key={t}
               className={`result__type-option ${t === type ? 'result__type-option--active' : ''}`}
@@ -437,7 +424,7 @@ export default function Result() {
       </Card>
 
       {/* Save destination hint */}
-      {!saved && !saving && !['calendar', 'note'].includes(type) && (
+      {!saved && !saving && (type === 'receipt' || type === 'document' || type === 'contact') && (
         <div className="result__destination">
           <Archive size={14} />
           <span>Saves to your Library</span>

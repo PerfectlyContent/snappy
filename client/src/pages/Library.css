@@ -121,30 +121,6 @@
   background: rgba(245, 158, 11, 0.08);
   color: #D97706;
 }
-.library__row-icon[data-type="ticket"] {
-  background: rgba(236, 72, 153, 0.08);
-  color: #DB2777;
-}
-.library__row-icon[data-type="recipe"] {
-  background: rgba(239, 68, 68, 0.08);
-  color: #DC2626;
-}
-.library__row-icon[data-type="prescription"] {
-  background: rgba(20, 184, 166, 0.08);
-  color: #0D9488;
-}
-.library__row-icon[data-type="product"] {
-  background: rgba(99, 102, 241, 0.08);
-  color: #4F46E5;
-}
-.library__row-icon[data-type="handwriting"] {
-  background: rgba(245, 158, 11, 0.08);
-  color: #B45309;
-}
-.library__row-icon[data-type="screenshot"] {
-  background: rgba(100, 116, 139, 0.08);
-  color: #475569;
-}
 
 .library__row-body {
   flex: 1;

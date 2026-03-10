@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Calendar, FileText, User, Receipt, StickyNote, Trash2, Download, Share2, Mail, Copy, X, ChevronDown, Ticket, CookingPot, Pill, Package, PenLine, Monitor } from 'lucide-react';
+import { Calendar, FileText, User, Receipt, StickyNote, Trash2, Download, Share2, Mail, Copy, X, ChevronDown } from 'lucide-react';
 import { getItems, getItem, deleteItem } from '../utils/storage';
 import { downloadImage, downloadVCard, buildVCard } from '../utils/export';
 import Badge from '../components/Common/Badge';
@@ -14,12 +14,6 @@ const TYPE_ICONS = {
   contact: User,
   document: FileText,
   note: StickyNote,
-  ticket: Ticket,
-  recipe: CookingPot,
-  prescription: Pill,
-  product: Package,
-  handwriting: PenLine,
-  screenshot: Monitor,
 };
 
 export default function Library() {
@@ -81,23 +75,6 @@ export default function Library() {
     } else if (item.type === 'document') {
       if (d.issuer) lines.push(`From: ${d.issuer}`);
       if (d.date) lines.push(`Date: ${d.date}`);
-    } else if (item.type === 'ticket') {
-      if (d.venue) lines.push(`Venue: ${d.venue}`);
-      if (d.date) lines.push(`Date: ${d.date}`);
-      if (d.seat) lines.push(`Seat: ${d.seat}`);
-      if (d.confirmationNumber) lines.push(`Confirmation: ${d.confirmationNumber}`);
-    } else if (item.type === 'recipe') {
-      if (d.servings) lines.push(`Serves: ${d.servings}`);
-      if (d.ingredients?.length) lines.push(`Ingredients: ${d.ingredients.join(', ')}`);
-    } else if (item.type === 'prescription') {
-      if (d.dosage) lines.push(`Dosage: ${d.dosage}`);
-      if (d.frequency) lines.push(`Frequency: ${d.frequency}`);
-      if (d.pharmacy) lines.push(`Pharmacy: ${d.pharmacy}`);
-    } else if (item.type === 'product') {
-      if (d.brand) lines.push(`Brand: ${d.brand}`);
-      if (d.price) lines.push(`Price: ${d.price}`);
-    } else if (item.type === 'handwriting' || item.type === 'screenshot') {
-      if (d.content) lines.push(d.content);
     }
     return lines.join('\n');
   }
@@ -178,7 +155,7 @@ export default function Library() {
   function getTitle(item) {
     const d = item.data;
     return d?.vendor || d?.name || d?.subject || d?.title || d?.eventTitle
-      || d?.events?.[0]?.eventTitle || d?.medication || d?.app || 'Saved item';
+      || d?.events?.[0]?.eventTitle || 'Saved item';
   }
 
   function getSubtitle(item) {
@@ -186,12 +163,6 @@ export default function Library() {
     if (item.type === 'receipt') return d?.total ? `${d.total}` : d?.date || null;
     if (item.type === 'contact') return d?.email || d?.phone || d?.company || null;
     if (item.type === 'document') return d?.issuer || d?.date || null;
-    if (item.type === 'ticket') return d?.venue || d?.date || d?.ticketType || null;
-    if (item.type === 'recipe') return d?.servings ? `Serves ${d.servings}` : d?.prepTime || null;
-    if (item.type === 'prescription') return d?.dosage || d?.pharmacy || null;
-    if (item.type === 'product') return d?.brand || d?.price || null;
-    if (item.type === 'handwriting') return d?.source || null;
-    if (item.type === 'screenshot') return d?.app || d?.screenshotType || null;
     return null;
   }
 
@@ -280,7 +251,7 @@ export default function Library() {
       </div>
 
       <div className="library__pills">
-        {['all', 'receipt', 'document', 'contact', 'ticket', 'recipe', 'prescription', 'product', 'handwriting', 'screenshot'].map(f => (
+        {['all', 'receipt', 'document', 'contact'].map(f => (
           <button
             key={f}
             className={`library__pill ${filter === f ? 'library__pill--on' : ''}`}
@@ -303,7 +274,7 @@ export default function Library() {
             </svg>
           </div>
           <h3>{filter === 'all' ? 'Library is empty' : `No ${filter}s yet`}</h3>
-          <p>Snap a photo to classify and save it here</p>
+          <p>Snap a receipt, document, or contact to save it here</p>
           <Button variant="secondary" size="small" onClick={() => navigate('/')}>
             Take a snap
           </Button>

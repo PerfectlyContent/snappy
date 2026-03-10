@@ -42,36 +42,6 @@
   color: #CA8A04;
 }
 
-.badge--pink {
-  background: rgba(236, 72, 153, 0.08);
-  color: #DB2777;
-}
-
-.badge--red {
-  background: rgba(239, 68, 68, 0.08);
-  color: #DC2626;
-}
-
-.badge--teal {
-  background: rgba(20, 184, 166, 0.08);
-  color: #0D9488;
-}
-
-.badge--indigo {
-  background: rgba(99, 102, 241, 0.08);
-  color: #4F46E5;
-}
-
-.badge--amber {
-  background: rgba(245, 158, 11, 0.08);
-  color: #B45309;
-}
-
-.badge--slate {
-  background: rgba(100, 116, 139, 0.08);
-  color: #475569;
-}
-
 .badge--gray {
   background: var(--bg-tertiary);
   color: var(--label-secondary);
