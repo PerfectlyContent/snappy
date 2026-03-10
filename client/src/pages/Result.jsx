@@ -168,14 +168,12 @@ export default function Result() {
       return;
     }
 
-    // Contact → deep link to Google Contacts
+    // Contact → download vCard with all fields pre-filled
     if (type === 'contact') {
-      const url = buildContactUrl(editedData);
-      window.open(url, '_blank');
-      setSavedLink(url);
+      downloadVCard(editedData);
       setSaved(true);
-      setToast({ message: 'Opened in Google Contacts', type: 'success' });
-      logActivity(type, editedData, url);
+      setToast({ message: 'Contact downloaded', type: 'success' });
+      logActivity(type, editedData, null);
       return;
     }
 
@@ -487,11 +485,13 @@ export default function Result() {
               </>
             ) : type === 'contact' ? (
               <>
-                <Button variant="primary" size="large" fullWidth icon={Save} onClick={handleSave}>
-                  Add to Google Contacts
+                <Button variant="primary" size="large" fullWidth icon={Download} onClick={handleSave}>
+                  Save Contact (.vcf)
                 </Button>
-                <Button variant="secondary" fullWidth icon={Download} onClick={() => downloadVCard(editedData)}>
-                  Download vCard (.vcf)
+                <Button variant="secondary" fullWidth icon={Save} onClick={() => {
+                  window.open(buildContactUrl(editedData), '_blank');
+                }}>
+                  Open in Google Contacts
                 </Button>
               </>
             ) : (
