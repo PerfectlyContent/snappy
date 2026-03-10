@@ -8,7 +8,7 @@ import Button from '../components/Common/Button';
 import './Settings.css';
 
 export default function Settings() {
-  const { user, authenticated, login, logout } = useAuth();
+  const { user, authenticated, provider, login, logout } = useAuth();
   const navigate = useNavigate();
 
   const services = [
@@ -67,12 +67,22 @@ export default function Settings() {
       <div className="settings__cta">
         {authenticated ? (
           <Button variant="ghost" fullWidth icon={LogOut} onClick={logout}>
-            Disconnect Account
+            Disconnect {provider === 'apple' ? 'Apple' : 'Google'} Account
           </Button>
         ) : (
-          <Button variant="primary" fullWidth onClick={login}>
-            Connect Google Account
-          </Button>
+          <>
+            <Button variant="primary" fullWidth onClick={login}>
+              Connect Google Account
+            </Button>
+            <Button
+              variant="secondary"
+              fullWidth
+              onClick={() => { window.location.href = '/auth/apple'; }}
+              style={{ marginTop: 'var(--space-2)' }}
+            >
+              Connect Apple Account
+            </Button>
+          </>
         )}
       </div>
 

@@ -59,6 +59,70 @@ export function buildCalendarUrl(event) {
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
+// ── ICS file generation (Apple Calendar / any calendar app) ──
+
+export function buildIcsFile(event) {
+  const date = parseDate(event.date);
+  if (!date) return null;
+
+  const startTime = normalizeTime(event.time) || '09:00';
+  let endTime = normalizeTime(event.endTime);
+  if (!endTime) {
+    const [h, m] = startTime.split(':').map(Number);
+    const dur = event.duration || 60;
+    const total = h * 60 + m + dur;
+    endTime = `${String(Math.floor(total / 60) % 24).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+  }
+
+  const start = toCalendarDateStr(date, startTime);
+  const end = toCalendarDateStr(date, endTime);
+  const title = event.eventTitle || event.title || 'Untitled Event';
+  const uid = `snappy-${Date.now()}-${Math.random().toString(36).slice(2)}@snappy.app`;
+
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Snappy//Snappy App//EN',
+    'CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTART:${start}`,
+    `DTEND:${end}`,
+    `SUMMARY:${title}`,
+  ];
+
+  if (event.location) lines.push(`LOCATION:${event.location}`);
+  if (event.description) lines.push(`DESCRIPTION:${event.description}`);
+  if (event.attendees?.length) {
+    event.attendees.forEach(email => {
+      lines.push(`ATTENDEE;CN=${email}:mailto:${email}`);
+    });
+  }
+
+  lines.push('END:VEVENT', 'END:VCALENDAR');
+  return lines.join('\r\n');
+}
+
+export function downloadIcsFile(events) {
+  const evts = Array.isArray(events) ? events : [events];
+  evts.forEach((evt, i) => {
+    const ics = buildIcsFile(evt);
+    if (!ics) return;
+    const blob = new Blob([ics], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob);
+    const title = (evt.eventTitle || evt.title || 'event').replace(/[^a-zA-Z0-9]/g, '_');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title}.ics`;
+    document.body.appendChild(a);
+    setTimeout(() => {
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, i * 300);
+  });
+}
+
 // ── vCard generation ──────────────────────────────────────────
 
 export function buildVCard(contact) {

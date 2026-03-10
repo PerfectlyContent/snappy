@@ -5,7 +5,7 @@ import {
   Save, Send, ChevronDown, ChevronUp, ExternalLink, AlertTriangle,
   UserPlus, X, Download
 } from 'lucide-react';
-import { buildCalendarUrl, downloadVCard, downloadImage } from '../utils/export';
+import { buildCalendarUrl, downloadIcsFile, downloadVCard, downloadImage } from '../utils/export';
 import Card from '../components/Common/Card';
 import Button from '../components/Common/Button';
 import Badge from '../components/Common/Badge';
@@ -101,6 +101,20 @@ export default function Result() {
     setEditedData({ events: updated });
   }
 
+  function handleSaveIcs() {
+    const evts = editedData.events || [editedData];
+    downloadIcsFile(evts);
+    const msg = evts.length > 1
+      ? `${evts.length} calendar files downloaded`
+      : 'Calendar file downloaded — open to add to Apple Calendar';
+    setToast({ message: msg, type: 'success' });
+    setSaved(true);
+
+    const activity = JSON.parse(localStorage.getItem('snappy_activity') || '[]');
+    activity.unshift({ type, data: editedData, timestamp: new Date().toISOString() });
+    localStorage.setItem('snappy_activity', JSON.stringify(activity.slice(0, 50)));
+  }
+
   function handleSave() {
     // Notes save locally
     if (type === 'note') {
@@ -127,7 +141,6 @@ export default function Result() {
       evts.forEach((evt, i) => {
         const url = buildCalendarUrl(evt);
         if (url) {
-          // Small delay between tabs so browser doesn't block them
           setTimeout(() => window.open(url, '_blank'), i * 300);
           if (i === 0) link = url;
         }
@@ -430,17 +443,30 @@ export default function Result() {
           </>
         ) : (
           <>
-            <Button
-              variant="primary"
-              size="large"
-              fullWidth
-              icon={type === 'receipt' || type === 'document' ? Download : Save}
-              onClick={handleSave}
-            >
-              {type === 'calendar' && events.length > 1
-                ? `Add ${events.length} Events to Calendar`
-                : TYPE_ACTIONS[type]}
-            </Button>
+            {type === 'calendar' ? (
+              <>
+                <Button variant="primary" size="large" fullWidth icon={Save} onClick={handleSave}>
+                  {events.length > 1 ? `Add ${events.length} Events to Google Calendar` : 'Add to Google Calendar'}
+                </Button>
+                <Button variant="secondary" fullWidth icon={Download} onClick={handleSaveIcs}>
+                  {events.length > 1 ? `Download ${events.length} .ics Files` : 'Add to Apple Calendar (.ics)'}
+                </Button>
+              </>
+            ) : type === 'contact' ? (
+              <Button variant="primary" size="large" fullWidth icon={Download} onClick={handleSave}>
+                Save Contact (.vcf)
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                size="large"
+                fullWidth
+                icon={type === 'receipt' || type === 'document' ? Download : Save}
+                onClick={handleSave}
+              >
+                {TYPE_ACTIONS[type]}
+              </Button>
+            )}
             <Button
               variant="secondary"
               fullWidth
