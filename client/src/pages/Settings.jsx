@@ -8,13 +8,19 @@ import Button from '../components/Common/Button';
 import './Settings.css';
 
 export default function Settings() {
-  const { user, authenticated, provider, login, logout, appleEnabled } = useAuth();
+  const { user, authenticated, provider, login, logout, appleEnabled, calendarConnected, connectCalendar } = useAuth();
   const navigate = useNavigate();
 
   const services = [
-    { icon: Calendar, label: 'Calendar', desc: 'Events and reminders' },
-    { icon: HardDrive, label: 'Drive', desc: 'Receipts and documents' },
-    { icon: Users, label: 'Contacts', desc: 'Business cards' },
+    {
+      icon: Calendar,
+      label: 'Calendar',
+      desc: calendarConnected ? 'Connected' : 'Events and reminders',
+      connected: calendarConnected,
+      onConnect: provider === 'google' && !calendarConnected ? connectCalendar : null,
+    },
+    { icon: HardDrive, label: 'Drive', desc: 'Receipts and documents', connected: authenticated },
+    { icon: Users, label: 'Contacts', desc: 'Business cards', connected: authenticated },
   ];
 
   return (
@@ -42,8 +48,8 @@ export default function Settings() {
       <div className="settings__section">
         <h2 className="settings__section-label">Connected Services</h2>
         <div className="settings__group">
-          {services.map(({ icon: Icon, label, desc }) => (
-            <div key={label} className={`settings__row ${!authenticated ? 'settings__row--disconnected' : ''}`}>
+          {services.map(({ icon: Icon, label, desc, connected, onConnect }) => (
+            <div key={label} className={`settings__row ${!connected ? 'settings__row--disconnected' : ''}`}>
               <div className="settings__row-icon">
                 <Icon size={18} strokeWidth={1.5} />
               </div>
@@ -51,10 +57,12 @@ export default function Settings() {
                 <span className="settings__row-label">{label}</span>
                 <span className="settings__row-desc">{desc}</span>
               </div>
-              {authenticated ? (
+              {connected ? (
                 <div className="settings__row-check">
                   <Check size={14} strokeWidth={2.5} />
                 </div>
+              ) : onConnect ? (
+                <button className="settings__row-connect" onClick={onConnect}>Connect</button>
               ) : (
                 <ChevronRight size={16} className="settings__row-chevron" />
               )}

@@ -1,10 +1,11 @@
 import { google } from 'googleapis';
 
-const SCOPES = [
+export const SIGN_IN_SCOPES = [
   'https://www.googleapis.com/auth/userinfo.email',
   'https://www.googleapis.com/auth/userinfo.profile',
-  'https://www.googleapis.com/auth/calendar.events.readonly',
 ];
+
+export const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.events.readonly';
 
 export function createOAuth2Client() {
   return new google.auth.OAuth2(
@@ -14,11 +15,12 @@ export function createOAuth2Client() {
   );
 }
 
-export function getAuthUrl(oauth2Client) {
+export function getAuthUrl(oauth2Client, { scopes, includeGrantedScopes = false } = {}) {
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
-    scope: SCOPES,
+    scope: scopes,
     prompt: 'consent',
+    include_granted_scopes: includeGrantedScopes,
   });
 }
 
@@ -37,5 +39,3 @@ export function getAuthenticatedClient(session) {
 
   return client;
 }
-
-export { SCOPES };
