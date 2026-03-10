@@ -6,7 +6,7 @@ import {
   UserPlus, X, Archive, Download, Ticket, CookingPot, Pill,
   Package, PenLine, Monitor
 } from 'lucide-react';
-import { buildCalendarUrl, downloadIcsFile, downloadVCard, downloadImage } from '../utils/export';
+import { buildCalendarUrl, buildContactUrl, downloadIcsFile, downloadVCard, downloadImage } from '../utils/export';
 import { saveItem } from '../utils/storage';
 import Card from '../components/Common/Card';
 import Button from '../components/Common/Button';
@@ -168,7 +168,22 @@ export default function Result() {
       return;
     }
 
-    // Receipts, documents, contacts → save to IndexedDB library
+    // Contact → deep link to Google Contacts + save to Library
+    if (type === 'contact') {
+      const url = buildContactUrl(editedData);
+      window.open(url, '_blank');
+      setSavedLink(url);
+      // Also save to Library for local reference
+      const imageData = sessionStorage.getItem('snappy_image');
+      const fileName = sessionStorage.getItem('snappy_fileName') || null;
+      saveItem({ type, data: editedData, image: imageData, fileName }).catch(() => {});
+      setSaved(true);
+      setToast({ message: 'Opened in Google Contacts', type: 'success' });
+      logActivity(type, editedData, url);
+      return;
+    }
+
+    // Receipts, documents, etc. → save to IndexedDB library
     setSaving(true);
     try {
       const imageData = sessionStorage.getItem('snappy_image');
@@ -437,7 +452,7 @@ export default function Result() {
       </Card>
 
       {/* Save destination hint */}
-      {!saved && !saving && !['calendar', 'note'].includes(type) && (
+      {!saved && !saving && !['calendar', 'contact', 'note'].includes(type) && (
         <div className="result__destination">
           <Archive size={14} />
           <span>Saves to your Library</span>
@@ -459,7 +474,7 @@ export default function Result() {
             {savedLink && (
               <a href={savedLink} target="_blank" rel="noopener noreferrer" className="result__view-link">
                 <ExternalLink size={16} />
-                {type === 'calendar' ? 'Open in Calendar' : 'View in Library'}
+                {type === 'calendar' ? 'Open in Calendar' : type === 'contact' ? 'Open in Contacts' : 'View in Library'}
               </a>
             )}
           </>
@@ -472,6 +487,15 @@ export default function Result() {
                 </Button>
                 <Button variant="secondary" fullWidth icon={Download} onClick={handleSaveIcs}>
                   {events.length > 1 ? `Download ${events.length} .ics Files` : 'Add to Apple Calendar (.ics)'}
+                </Button>
+              </>
+            ) : type === 'contact' ? (
+              <>
+                <Button variant="primary" size="large" fullWidth icon={Save} onClick={handleSave}>
+                  Add to Google Contacts
+                </Button>
+                <Button variant="secondary" fullWidth icon={Download} onClick={() => downloadVCard(editedData)}>
+                  Download vCard (.vcf)
                 </Button>
               </>
             ) : (

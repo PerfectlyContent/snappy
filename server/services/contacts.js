@@ -1,36 +1,5 @@
 import { google } from 'googleapis';
 
-export async function createContact(auth, contactData) {
-  const people = google.people({ version: 'v1', auth });
-
-  const person = {
-    names: contactData.name ? [{ givenName: contactData.name }] : [],
-    organizations: contactData.company ? [{
-      name: contactData.company,
-      title: contactData.title || '',
-    }] : [],
-    emailAddresses: contactData.email ? [{ value: contactData.email }] : [],
-    phoneNumbers: contactData.phone ? [{ value: contactData.phone }] : [],
-    urls: contactData.website ? [{ value: contactData.website }] : [],
-    addresses: contactData.address ? [{ formattedValue: contactData.address }] : [],
-    biographies: [{ value: 'Added by Snappy', contentType: 'TEXT_PLAIN' }],
-  };
-
-  const res = await people.people.createContact({
-    requestBody: person,
-    personFields: 'names,emailAddresses,phoneNumbers,organizations,urls,addresses,biographies',
-  });
-
-  const contactId = res.data.resourceName?.replace('people/', '');
-  return {
-    resourceName: res.data.resourceName,
-    contactUrl: contactId ? `https://contacts.google.com/person/${contactId}` : null,
-    name: contactData.name,
-    email: contactData.email,
-    phone: contactData.phone,
-  };
-}
-
 export async function searchContacts(auth, query) {
   const people = google.people({ version: 'v1', auth });
 

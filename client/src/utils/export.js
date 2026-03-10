@@ -123,6 +123,24 @@ export function downloadIcsFile(events) {
   });
 }
 
+// ── Google Contacts deep link ─────────────────────────────────
+
+export function buildContactUrl(contact) {
+  const params = new URLSearchParams();
+
+  if (contact.name) params.set('name', contact.name);
+  if (contact.email) params.set('email', contact.email);
+  if (contact.phone) params.set('phone', contact.phone);
+  if (contact.company || contact.organization) {
+    params.set('company', contact.company || contact.organization);
+  }
+  if (contact.title || contact.jobTitle) {
+    params.set('jobtitle', contact.title || contact.jobTitle);
+  }
+
+  return `https://contacts.google.com/new?${params.toString()}`;
+}
+
 // ── vCard generation ──────────────────────────────────────────
 
 export function buildVCard(contact) {
