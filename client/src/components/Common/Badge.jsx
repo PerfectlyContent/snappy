@@ -6,6 +6,12 @@ const TYPE_CONFIG = {
   contact: { label: 'Contact', color: 'purple' },
   document: { label: 'Document', color: 'orange' },
   note: { label: 'Note', color: 'yellow' },
+  ticket: { label: 'Ticket', color: 'pink' },
+  recipe: { label: 'Recipe', color: 'red' },
+  prescription: { label: 'Prescription', color: 'teal' },
+  product: { label: 'Product', color: 'indigo' },
+  handwriting: { label: 'Handwriting', color: 'amber' },
+  screenshot: { label: 'Screenshot', color: 'slate' },
 };
 
 export default function Badge({ type, size = 'regular' }) {
