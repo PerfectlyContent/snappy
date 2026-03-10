@@ -1,12 +1,11 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Calendar, FileText, User, Receipt, StickyNote,
   Save, Send, ChevronDown, ChevronUp, ExternalLink, AlertTriangle,
-  UserPlus, X, Mail
+  UserPlus, X, Download
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { api } from '../utils/api';
+import { buildCalendarUrl, downloadVCard, downloadImage } from '../utils/export';
 import Card from '../components/Common/Card';
 import Button from '../components/Common/Button';
 import Badge from '../components/Common/Badge';
@@ -24,21 +23,19 @@ const TYPE_ICONS = {
 };
 
 const TYPE_ACTIONS = {
-  calendar: 'Save to Calendar',
-  receipt: 'Save to Drive',
-  contact: 'Save to Contacts',
-  document: 'Save to Drive',
+  calendar: 'Add to Calendar',
+  receipt: 'Download Receipt',
+  contact: 'Add to Contacts',
+  document: 'Download Document',
   note: 'Save Note',
 };
 
 export default function Result() {
   const navigate = useNavigate();
-  const { authenticated, login } = useAuth();
   const [result, setResult] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
   const [expanded, setExpanded] = useState(true);
   const [editedData, setEditedData] = useState({});
-  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savedLink, setSavedLink] = useState(null);
   const [showForward, setShowForward] = useState(false);
@@ -47,12 +44,6 @@ export default function Result() {
   const [manualType, setManualType] = useState(null);
   const [entered, setEntered] = useState(false);
   const [attendeeInput, setAttendeeInput] = useState('');
-  const [sendInvites, setSendInvites] = useState(true);
-  const [contactSuggestions, setContactSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
-  const suggestionsRef = useRef(null);
-  const searchTimeout = useRef(null);
 
   useEffect(() => {
     requestAnimationFrame(() => setEntered(true));
@@ -67,45 +58,15 @@ export default function Result() {
     }
     const parsed = JSON.parse(storedResult);
     setResult(parsed);
-    // Handle multi-event calendar: flatten events array into editedData
     if (parsed.type === 'calendar' && parsed.data?.events) {
       setEditedData(parsed.data);
     } else if (parsed.type === 'calendar' && !parsed.data?.events) {
-      // Wrap single legacy event into events array
       setEditedData({ events: [parsed.data] });
     } else {
       setEditedData(parsed.data || {});
     }
     setImageUrl(storedImage);
   }, [navigate]);
-
-  const searchContacts = useCallback((query) => {
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    if (!authenticated) return;
-    searchTimeout.current = setTimeout(async () => {
-      setSuggestionsLoading(true);
-      try {
-        const res = await api.searchContacts(query);
-        setContactSuggestions(res.contacts || []);
-        setShowSuggestions(true);
-      } catch {
-        setContactSuggestions([]);
-      } finally {
-        setSuggestionsLoading(false);
-      }
-    }, 250);
-  }, [authenticated]);
-
-  // Close suggestions on outside click
-  useEffect(() => {
-    function handleClick(e) {
-      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target)) {
-        setShowSuggestions(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
 
   if (!result) return null;
 
@@ -140,18 +101,15 @@ export default function Result() {
     setEditedData({ events: updated });
   }
 
-  async function handleSave() {
-    // Notes save locally — no Google auth needed
+  function handleSave() {
+    // Notes save locally
     if (type === 'note') {
       const ts = new Date().toISOString();
       const noteId = Date.now().toString(36);
-
-      // Save to dedicated notes storage
       const notes = JSON.parse(localStorage.getItem('snappy_notes') || '[]');
       notes.unshift({ id: noteId, title: editedData.title || 'Untitled', content: editedData.content || '', source: 'voice', timestamp: ts });
       localStorage.setItem('snappy_notes', JSON.stringify(notes));
 
-      // Also save to activity history
       const activity = JSON.parse(localStorage.getItem('snappy_activity') || '[]');
       activity.unshift({ type: 'note', data: editedData, timestamp: ts });
       localStorage.setItem('snappy_activity', JSON.stringify(activity.slice(0, 50)));
@@ -161,62 +119,46 @@ export default function Result() {
       return;
     }
 
-    if (!authenticated) {
-      login();
-      return;
-    }
+    let link = null;
 
-    setSaving(true);
-    try {
-      let link = null;
-
-      if (type === 'calendar') {
-        const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const evts = editedData.events || [editedData];
-        const results = await Promise.all(evts.map(evt => api.createEvent({ ...evt, timeZone: userTz, sendInvites })));
-        link = results[0]?.htmlLink;
-        if (evts.length > 1) {
-          setToast({ message: `${evts.length} events saved to Calendar`, type: 'success' });
+    if (type === 'calendar') {
+      const evts = editedData.events || [editedData];
+      // Open each event in Google Calendar
+      evts.forEach((evt, i) => {
+        const url = buildCalendarUrl(evt);
+        if (url) {
+          // Small delay between tabs so browser doesn't block them
+          setTimeout(() => window.open(url, '_blank'), i * 300);
+          if (i === 0) link = url;
         }
-      } else if (type === 'contact') {
-        const contactRes = await api.createContact(editedData);
-        link = contactRes.contactUrl;
-      } else {
-        // receipt or document → upload to Drive
-        const imageData = sessionStorage.getItem('snappy_image');
-        if (imageData) {
-          const res = await api.uploadBase64ToDrive(
-            imageData,
-            'image/png',
-            type,
-            sessionStorage.getItem('snappy_fileName')
-          );
-          link = res.webViewLink;
-        }
-      }
-
-      setSaved(true);
-      setSavedLink(link);
-      setToast({ message: `Saved to ${type === 'calendar' ? 'Calendar' : type === 'contact' ? 'Contacts' : 'Drive'}`, type: 'success' });
-
-      // Add to activity
-      const activity = JSON.parse(localStorage.getItem('snappy_activity') || '[]');
-      activity.unshift({
-        type,
-        data: editedData,
-        link,
-        timestamp: new Date().toISOString(),
       });
-      localStorage.setItem('snappy_activity', JSON.stringify(activity.slice(0, 50)));
-    } catch (err) {
-      if (err.reauth) {
-        setToast({ message: 'Session expired — please reconnect Google', type: 'error' });
-        return;
-      }
-      setToast({ message: err.message, type: 'error' });
-    } finally {
-      setSaving(false);
+      const msg = evts.length > 1
+        ? `${evts.length} events opened in Google Calendar`
+        : 'Opened in Google Calendar';
+      setToast({ message: msg, type: 'success' });
+    } else if (type === 'contact') {
+      downloadVCard(editedData);
+      setToast({ message: 'Contact file downloaded — open to add to Contacts', type: 'success' });
+    } else {
+      // receipt or document → download image
+      const imageData = sessionStorage.getItem('snappy_image');
+      const fileName = sessionStorage.getItem('snappy_fileName') || `snappy-${type}.png`;
+      downloadImage(imageData, fileName);
+      setToast({ message: 'File downloaded', type: 'success' });
     }
+
+    setSaved(true);
+    setSavedLink(link);
+
+    // Add to activity
+    const activity = JSON.parse(localStorage.getItem('snappy_activity') || '[]');
+    activity.unshift({
+      type,
+      data: editedData,
+      link,
+      timestamp: new Date().toISOString(),
+    });
+    localStorage.setItem('snappy_activity', JSON.stringify(activity.slice(0, 50)));
   }
 
   function renderFields() {
@@ -435,84 +377,29 @@ export default function Result() {
                         ))}
                       </div>
                     )}
-                    <div className="result__attendee-input-wrap" ref={suggestionsRef}>
-                      <div className="result__attendee-input-row">
-                        <input
-                          className="result__field-input"
-                          type="email"
-                          value={attendeeInput}
-                          placeholder="Search contacts or type email"
-                          onChange={(e) => {
-                            setAttendeeInput(e.target.value);
-                            searchContacts(e.target.value);
-                          }}
-                          onFocus={() => {
-                            if (contactSuggestions.length) setShowSuggestions(true);
-                            else searchContacts(attendeeInput);
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ',') {
-                              e.preventDefault();
-                              addAttendee(i);
-                              setShowSuggestions(false);
-                            }
-                            if (e.key === 'Escape') setShowSuggestions(false);
-                          }}
-                        />
-                        <button
-                          className="result__attendee-add"
-                          onClick={() => { addAttendee(i); setShowSuggestions(false); }}
-                          disabled={!attendeeInput.trim()}
-                          aria-label="Add attendee"
-                        >
-                          Add
-                        </button>
-                      </div>
-                      {showSuggestions && contactSuggestions.length > 0 && (
-                        <div className="result__contact-suggestions">
-                          {contactSuggestions
-                            .filter(c => !(evt.attendees || []).includes(c.email))
-                            .map(contact => (
-                              <button
-                                key={contact.email}
-                                className="result__contact-suggestion"
-                                onClick={() => {
-                                  const updated = [...events];
-                                  const current = updated[i].attendees || [];
-                                  if (!current.includes(contact.email)) {
-                                    updated[i] = { ...updated[i], attendees: [...current, contact.email] };
-                                    setEditedData({ events: updated });
-                                  }
-                                  setAttendeeInput('');
-                                  setShowSuggestions(false);
-                                }}
-                              >
-                                <span className="result__contact-name">{contact.name || contact.email}</span>
-                                {contact.name && <span className="result__contact-email">{contact.email}</span>}
-                              </button>
-                            ))
+                    <div className="result__attendee-input-row">
+                      <input
+                        className="result__field-input"
+                        type="email"
+                        value={attendeeInput}
+                        placeholder="Type email address"
+                        onChange={(e) => setAttendeeInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ',') {
+                            e.preventDefault();
+                            addAttendee(i);
                           }
-                        </div>
-                      )}
-                      {showSuggestions && suggestionsLoading && (
-                        <div className="result__contact-suggestions">
-                          <div className="result__contact-suggestion result__contact-suggestion--loading">
-                            Searching contacts...
-                          </div>
-                        </div>
-                      )}
+                        }}
+                      />
+                      <button
+                        className="result__attendee-add"
+                        onClick={() => addAttendee(i)}
+                        disabled={!attendeeInput.trim()}
+                        aria-label="Add attendee"
+                      >
+                        Add
+                      </button>
                     </div>
-                    {(evt.attendees || []).length > 0 && (
-                      <label className="result__invite-toggle">
-                        <input
-                          type="checkbox"
-                          checked={sendInvites}
-                          onChange={(e) => setSendInvites(e.target.checked)}
-                        />
-                        <Mail size={14} />
-                        <span>Send invite emails to attendees</span>
-                      </label>
-                    )}
                   </div>
                 </div>
               ))
@@ -537,7 +424,7 @@ export default function Result() {
             </Button>
             {savedLink && (
               <a href={savedLink} target="_blank" rel="noopener noreferrer" className="result__view-link">
-                <ExternalLink size={16} /> View in {type === 'calendar' ? 'Calendar' : type === 'contact' ? 'Contacts' : 'Drive'}
+                <ExternalLink size={16} /> Open in Calendar
               </a>
             )}
           </>
@@ -547,17 +434,12 @@ export default function Result() {
               variant="primary"
               size="large"
               fullWidth
-              icon={Save}
-              loading={saving}
+              icon={type === 'receipt' || type === 'document' ? Download : Save}
               onClick={handleSave}
             >
-              {type === 'note'
-                ? 'Save Note'
-                : authenticated
-                  ? (type === 'calendar' && events.length > 1
-                      ? `Save ${events.length} Events to Calendar`
-                      : TYPE_ACTIONS[type])
-                  : 'Connect Google to Save'}
+              {type === 'calendar' && events.length > 1
+                ? `Add ${events.length} Events to Calendar`
+                : TYPE_ACTIONS[type]}
             </Button>
             <Button
               variant="secondary"
