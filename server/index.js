@@ -45,10 +45,8 @@ app.use(cookieSession({
   sameSite: 'lax',
 }));
 
-// Serve static client build in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(join(__dirname, '../client/dist')));
-}
+// Serve static client build
+app.use(express.static(join(__dirname, '../client/dist')));
 
 // Routes
 app.use('/auth', authRoutes);
@@ -60,13 +58,11 @@ app.use('/share', shareRoutes);
 app.use('/snap', snapRoutes);
 app.use('/health', healthRoutes);
 
-// SPA fallback in production
-if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
-    res.sendFile(join(__dirname, '../client/dist/index.html'));
-  });
-}
+// SPA fallback
+app.get('*', (req, res) => {
+  res.sendFile(join(__dirname, '../client/dist/index.html'));
+});
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Snappy server running on port ${PORT}`);
 });
