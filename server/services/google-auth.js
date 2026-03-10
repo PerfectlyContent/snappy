@@ -5,7 +5,6 @@ const SCOPES = [
   'https://www.googleapis.com/auth/userinfo.profile',
   'https://www.googleapis.com/auth/drive.file',
   'https://www.googleapis.com/auth/contacts',
-  'https://www.googleapis.com/auth/calendar.events',
 ];
 
 export function createOAuth2Client() {
