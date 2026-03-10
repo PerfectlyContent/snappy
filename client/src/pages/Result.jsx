@@ -257,20 +257,21 @@ export default function Result() {
           <div className="result__low-confidence">
             <AlertTriangle size={16} />
             <span>Low confidence — please verify the type</span>
-            <div className="result__type-options">
-              {['calendar', 'receipt', 'contact', 'document', 'note'].map(t => (
-                <button
-                  key={t}
-                  className={`result__type-option ${t === type ? 'result__type-option--active' : ''}`}
-                  onClick={() => setManualType(t)}
-                  aria-pressed={t === type}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
           </div>
         )}
+
+        <div className="result__type-options">
+          {['calendar', 'receipt', 'contact', 'document', 'note'].map(t => (
+            <button
+              key={t}
+              className={`result__type-option ${t === type ? 'result__type-option--active' : ''}`}
+              onClick={() => setManualType(t)}
+              aria-pressed={t === type}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
       </Card>
 
       {/* Fields */}
