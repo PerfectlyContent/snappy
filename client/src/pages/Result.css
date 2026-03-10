@@ -437,6 +437,33 @@
   padding-bottom: var(--space-2);
 }
 
+/* Save destination indicator */
+.result__destination {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--label-tertiary);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity var(--duration-enter) var(--ease-snappy),
+              transform var(--duration-enter) var(--ease-snappy);
+}
+
+.result--entered .result__destination {
+  opacity: 1;
+  transform: none;
+  transition-delay: 105ms;
+}
+
+.result__destination svg {
+  flex-shrink: 0;
+  color: var(--label-quaternary);
+}
+
 .result__actions {
   display: flex;
   flex-direction: column;

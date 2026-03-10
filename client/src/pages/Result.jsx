@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Calendar, FileText, User, Receipt, StickyNote,
   Save, Send, ChevronDown, ChevronUp, ExternalLink, AlertTriangle,
-  UserPlus, X, Download
+  UserPlus, X, Archive, Download
 } from 'lucide-react';
 import { buildCalendarUrl, downloadIcsFile, downloadVCard, downloadImage } from '../utils/export';
-import { api } from '../utils/api';
-import { useAuth } from '../context/AuthContext';
+import { saveItem } from '../utils/storage';
 import Card from '../components/Common/Card';
 import Button from '../components/Common/Button';
 import Badge from '../components/Common/Badge';
@@ -26,21 +25,21 @@ const TYPE_ICONS = {
 
 const TYPE_ACTIONS = {
   calendar: 'Add to Calendar',
-  receipt: 'Download Receipt',
-  contact: 'Add to Contacts',
-  document: 'Download Document',
+  receipt: 'Save Receipt',
+  contact: 'Save Contact',
+  document: 'Save Document',
   note: 'Save Note',
 };
 
 export default function Result() {
   const navigate = useNavigate();
-  const { authenticated, provider } = useAuth();
   const [result, setResult] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
   const [expanded, setExpanded] = useState(true);
   const [editedData, setEditedData] = useState({});
   const [saved, setSaved] = useState(false);
   const [savedLink, setSavedLink] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [showForward, setShowForward] = useState(false);
   const [showReachOut, setShowReachOut] = useState(false);
   const [toast, setToast] = useState(null);
@@ -104,6 +103,12 @@ export default function Result() {
     setEditedData({ events: updated });
   }
 
+  function logActivity(activityType, data, link) {
+    const activity = JSON.parse(localStorage.getItem('snappy_activity') || '[]');
+    activity.unshift({ type: activityType, data, link, timestamp: new Date().toISOString() });
+    localStorage.setItem('snappy_activity', JSON.stringify(activity.slice(0, 50)));
+  }
+
   function handleSaveIcs() {
     const evts = editedData.events || [editedData];
     downloadIcsFile(evts);
@@ -112,35 +117,27 @@ export default function Result() {
       : 'Calendar file downloaded — open to add to Apple Calendar';
     setToast({ message: msg, type: 'success' });
     setSaved(true);
-
-    const activity = JSON.parse(localStorage.getItem('snappy_activity') || '[]');
-    activity.unshift({ type, data: editedData, timestamp: new Date().toISOString() });
-    localStorage.setItem('snappy_activity', JSON.stringify(activity.slice(0, 50)));
+    logActivity(type, editedData, null);
   }
 
   async function handleSave() {
-    // Notes save locally
+    // Notes save to localStorage (existing behavior)
     if (type === 'note') {
       const ts = new Date().toISOString();
       const noteId = Date.now().toString(36);
       const notes = JSON.parse(localStorage.getItem('snappy_notes') || '[]');
       notes.unshift({ id: noteId, title: editedData.title || 'Untitled', content: editedData.content || '', source: 'voice', timestamp: ts });
       localStorage.setItem('snappy_notes', JSON.stringify(notes));
-
-      const activity = JSON.parse(localStorage.getItem('snappy_activity') || '[]');
-      activity.unshift({ type: 'note', data: editedData, timestamp: ts });
-      localStorage.setItem('snappy_activity', JSON.stringify(activity.slice(0, 50)));
-
+      logActivity('note', editedData, null);
       setSaved(true);
       setToast({ message: 'Note saved', type: 'success' });
       return;
     }
 
-    let link = null;
-
+    // Calendar → deep link (no API needed)
     if (type === 'calendar') {
       const evts = editedData.events || [editedData];
-      // Open each event in Google Calendar
+      let link = null;
       evts.forEach((evt, i) => {
         const url = buildCalendarUrl(evt);
         if (url) {
@@ -152,40 +149,28 @@ export default function Result() {
         ? `${evts.length} events opened in Google Calendar`
         : 'Opened in Google Calendar';
       setToast({ message: msg, type: 'success' });
-    } else if (type === 'contact') {
-      if (authenticated && provider === 'google') {
-        try {
-          await api.createContact(editedData);
-          setToast({ message: 'Contact saved to Google Contacts', type: 'success' });
-        } catch (err) {
-          console.error('Failed to save to Google Contacts:', err);
-          downloadVCard(editedData);
-          setToast({ message: 'Contact file downloaded — open to add to Contacts', type: 'success' });
-        }
-      } else {
-        downloadVCard(editedData);
-        setToast({ message: 'Contact file downloaded — open to add to Contacts', type: 'success' });
-      }
-    } else {
-      // receipt or document → download image
-      const imageData = sessionStorage.getItem('snappy_image');
-      const fileName = sessionStorage.getItem('snappy_fileName') || `snappy-${type}.png`;
-      downloadImage(imageData, fileName);
-      setToast({ message: 'File downloaded', type: 'success' });
+      setSaved(true);
+      setSavedLink(link);
+      logActivity(type, editedData, link);
+      return;
     }
 
-    setSaved(true);
-    setSavedLink(link);
-
-    // Add to activity
-    const activity = JSON.parse(localStorage.getItem('snappy_activity') || '[]');
-    activity.unshift({
-      type,
-      data: editedData,
-      link,
-      timestamp: new Date().toISOString(),
-    });
-    localStorage.setItem('snappy_activity', JSON.stringify(activity.slice(0, 50)));
+    // Receipts, documents, contacts → save to IndexedDB library
+    setSaving(true);
+    try {
+      const imageData = sessionStorage.getItem('snappy_image');
+      const fileName = sessionStorage.getItem('snappy_fileName') || null;
+      const id = await saveItem({ type, data: editedData, image: imageData, fileName });
+      setSaved(true);
+      setSavedLink(`/library?id=${id}`);
+      setToast({ message: 'Saved to Library', type: 'success' });
+      logActivity(type, editedData, `/library?id=${id}`);
+    } catch (err) {
+      console.error('Failed to save:', err);
+      setToast({ message: 'Failed to save — please try again', type: 'error' });
+    } finally {
+      setSaving(false);
+    }
   }
 
   function renderFields() {
@@ -438,6 +423,14 @@ export default function Result() {
         )}
       </Card>
 
+      {/* Save destination hint */}
+      {!saved && !saving && (type === 'receipt' || type === 'document' || type === 'contact') && (
+        <div className="result__destination">
+          <Archive size={14} />
+          <span>Saves to your Library</span>
+        </div>
+      )}
+
       {/* Actions */}
       <div className={`result__actions ${saved ? 'result__actions--saved' : ''}`}>
         {saved ? (
@@ -452,7 +445,8 @@ export default function Result() {
             </Button>
             {savedLink && (
               <a href={savedLink} target="_blank" rel="noopener noreferrer" className="result__view-link">
-                <ExternalLink size={16} /> Open in Calendar
+                <ExternalLink size={16} />
+                {type === 'calendar' ? 'Open in Calendar' : 'View in Library'}
               </a>
             )}
           </>
@@ -467,35 +461,19 @@ export default function Result() {
                   {events.length > 1 ? `Download ${events.length} .ics Files` : 'Add to Apple Calendar (.ics)'}
                 </Button>
               </>
-            ) : type === 'contact' ? (
-              <>
-                <Button
-                  variant="primary"
-                  size="large"
-                  fullWidth
-                  icon={authenticated && provider === 'google' ? Save : Download}
-                  onClick={handleSave}
-                >
-                  {authenticated && provider === 'google' ? 'Add to Google Contacts' : 'Save Contact (.vcf)'}
-                </Button>
-                {authenticated && provider === 'google' && (
-                  <Button variant="secondary" fullWidth icon={Download} onClick={() => {
-                    downloadVCard(editedData);
-                    setToast({ message: 'Contact file downloaded — open to add to Contacts', type: 'success' });
-                  }}>
-                    Download .vcf File
-                  </Button>
-                )}
-              </>
             ) : (
               <Button
                 variant="primary"
                 size="large"
                 fullWidth
-                icon={type === 'receipt' || type === 'document' ? Download : Save}
+                icon={saving ? undefined : Save}
                 onClick={handleSave}
+                loading={saving}
+                disabled={saving}
               >
-                {TYPE_ACTIONS[type]}
+                {saving
+                  ? 'Saving...'
+                  : TYPE_ACTIONS[type]}
               </Button>
             )}
             <Button
@@ -503,6 +481,7 @@ export default function Result() {
               fullWidth
               icon={Send}
               onClick={() => setShowForward(true)}
+              disabled={saving}
             >
               Forward to Someone
             </Button>
