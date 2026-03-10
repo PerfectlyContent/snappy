@@ -6,6 +6,8 @@ import {
   UserPlus, X, Download
 } from 'lucide-react';
 import { buildCalendarUrl, downloadIcsFile, downloadVCard, downloadImage } from '../utils/export';
+import { api } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import Card from '../components/Common/Card';
 import Button from '../components/Common/Button';
 import Badge from '../components/Common/Badge';
@@ -32,6 +34,7 @@ const TYPE_ACTIONS = {
 
 export default function Result() {
   const navigate = useNavigate();
+  const { authenticated, provider } = useAuth();
   const [result, setResult] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
   const [expanded, setExpanded] = useState(true);
@@ -115,7 +118,7 @@ export default function Result() {
     localStorage.setItem('snappy_activity', JSON.stringify(activity.slice(0, 50)));
   }
 
-  function handleSave() {
+  async function handleSave() {
     // Notes save locally
     if (type === 'note') {
       const ts = new Date().toISOString();
@@ -150,8 +153,19 @@ export default function Result() {
         : 'Opened in Google Calendar';
       setToast({ message: msg, type: 'success' });
     } else if (type === 'contact') {
-      downloadVCard(editedData);
-      setToast({ message: 'Contact file downloaded — open to add to Contacts', type: 'success' });
+      if (authenticated && provider === 'google') {
+        try {
+          await api.createContact(editedData);
+          setToast({ message: 'Contact saved to Google Contacts', type: 'success' });
+        } catch (err) {
+          console.error('Failed to save to Google Contacts:', err);
+          downloadVCard(editedData);
+          setToast({ message: 'Contact file downloaded — open to add to Contacts', type: 'success' });
+        }
+      } else {
+        downloadVCard(editedData);
+        setToast({ message: 'Contact file downloaded — open to add to Contacts', type: 'success' });
+      }
     } else {
       // receipt or document → download image
       const imageData = sessionStorage.getItem('snappy_image');
@@ -453,9 +467,25 @@ export default function Result() {
                 </Button>
               </>
             ) : type === 'contact' ? (
-              <Button variant="primary" size="large" fullWidth icon={Download} onClick={handleSave}>
-                Save Contact (.vcf)
-              </Button>
+              <>
+                <Button
+                  variant="primary"
+                  size="large"
+                  fullWidth
+                  icon={authenticated && provider === 'google' ? Save : Download}
+                  onClick={handleSave}
+                >
+                  {authenticated && provider === 'google' ? 'Add to Google Contacts' : 'Save Contact (.vcf)'}
+                </Button>
+                {authenticated && provider === 'google' && (
+                  <Button variant="secondary" fullWidth icon={Download} onClick={() => {
+                    downloadVCard(editedData);
+                    setToast({ message: 'Contact file downloaded — open to add to Contacts', type: 'success' });
+                  }}>
+                    Download .vcf File
+                  </Button>
+                )}
+              </>
             ) : (
               <Button
                 variant="primary"
