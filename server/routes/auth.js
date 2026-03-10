@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import { google } from 'googleapis';
 import { createOAuth2Client, getAuthUrl } from '../services/google-auth.js';
+import { getAppleAuthUrl, verifyAppleToken } from '../services/apple-auth.js';
 
 const router = Router();
+
+// ── Google OAuth ──────────────────────────────────────────────
 
 router.get('/google', (req, res) => {
   const client = createOAuth2Client();
@@ -21,6 +24,7 @@ router.get('/google/callback', async (req, res) => {
     const { tokens } = await client.getToken(code);
     client.setCredentials(tokens);
     req.session.tokens = tokens;
+    req.session.provider = 'google';
 
     const oauth2 = google.oauth2({ version: 'v2', auth: client });
     const { data: profile } = await oauth2.userinfo.get();
@@ -32,14 +36,61 @@ router.get('/google/callback', async (req, res) => {
 
     res.redirect(`${process.env.FRONTEND_URL}?auth=success`);
   } catch (err) {
-    console.error('OAuth callback error:', err);
+    console.error('Google OAuth callback error:', err);
+    res.redirect(`${process.env.FRONTEND_URL}?auth=error`);
+  }
+});
+
+// ── Apple Sign In ─────────────────────────────────────────────
+
+router.get('/apple', (req, res) => {
+  if (!process.env.APPLE_CLIENT_ID) {
+    return res.redirect(`${process.env.FRONTEND_URL}?auth=error`);
+  }
+  const url = getAppleAuthUrl();
+  res.redirect(url);
+});
+
+// Apple uses form_post, so body comes as URL-encoded POST
+router.post('/apple/callback', async (req, res) => {
+  const { code, user: userJson } = req.body;
+  if (!code) {
+    return res.redirect(`${process.env.FRONTEND_URL}?auth=error`);
+  }
+
+  try {
+    const { tokens, idToken } = await verifyAppleToken(code);
+    req.session.appleTokens = tokens;
+    req.session.provider = 'apple';
+
+    // Apple only sends user info on the FIRST authorization
+    let name = 'Apple User';
+    let email = idToken.email || '';
+    if (userJson) {
+      try {
+        const parsed = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
+        if (parsed.name) {
+          name = [parsed.name.firstName, parsed.name.lastName].filter(Boolean).join(' ');
+        }
+        if (parsed.email) email = parsed.email;
+      } catch { /* ignore parse errors */ }
+    }
+
+    req.session.user = { email, name, picture: null };
+    req.session.tokens = req.session.tokens || null; // no Google tokens
+
+    res.redirect(`${process.env.FRONTEND_URL}?auth=success`);
+  } catch (err) {
+    console.error('Apple Sign In callback error:', err);
     res.redirect(`${process.env.FRONTEND_URL}?auth=error`);
   }
 });
 
 router.get('/status', (req, res) => {
+  const authenticated = !!(req.session.tokens || req.session.appleTokens);
   res.json({
-    authenticated: !!req.session.tokens,
+    authenticated,
+    provider: req.session.provider || null,
     user: req.session.user || null,
   });
 });

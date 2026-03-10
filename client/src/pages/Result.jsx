@@ -5,7 +5,9 @@ import {
   Save, Send, ChevronDown, ChevronUp, ExternalLink, AlertTriangle,
   UserPlus, X, Download
 } from 'lucide-react';
-import { buildCalendarUrl, downloadVCard, downloadImage } from '../utils/export';
+import { buildCalendarUrl, downloadIcsFile, downloadVCard, downloadImage } from '../utils/export';
+import { api } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import Card from '../components/Common/Card';
 import Button from '../components/Common/Button';
 import Badge from '../components/Common/Badge';
@@ -32,6 +34,7 @@ const TYPE_ACTIONS = {
 
 export default function Result() {
   const navigate = useNavigate();
+  const { authenticated, provider } = useAuth();
   const [result, setResult] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
   const [expanded, setExpanded] = useState(true);
@@ -101,7 +104,21 @@ export default function Result() {
     setEditedData({ events: updated });
   }
 
-  function handleSave() {
+  function handleSaveIcs() {
+    const evts = editedData.events || [editedData];
+    downloadIcsFile(evts);
+    const msg = evts.length > 1
+      ? `${evts.length} calendar files downloaded`
+      : 'Calendar file downloaded — open to add to Apple Calendar';
+    setToast({ message: msg, type: 'success' });
+    setSaved(true);
+
+    const activity = JSON.parse(localStorage.getItem('snappy_activity') || '[]');
+    activity.unshift({ type, data: editedData, timestamp: new Date().toISOString() });
+    localStorage.setItem('snappy_activity', JSON.stringify(activity.slice(0, 50)));
+  }
+
+  async function handleSave() {
     // Notes save locally
     if (type === 'note') {
       const ts = new Date().toISOString();
@@ -127,7 +144,6 @@ export default function Result() {
       evts.forEach((evt, i) => {
         const url = buildCalendarUrl(evt);
         if (url) {
-          // Small delay between tabs so browser doesn't block them
           setTimeout(() => window.open(url, '_blank'), i * 300);
           if (i === 0) link = url;
         }
@@ -137,8 +153,19 @@ export default function Result() {
         : 'Opened in Google Calendar';
       setToast({ message: msg, type: 'success' });
     } else if (type === 'contact') {
-      downloadVCard(editedData);
-      setToast({ message: 'Contact file downloaded — open to add to Contacts', type: 'success' });
+      if (authenticated && provider === 'google') {
+        try {
+          await api.createContact(editedData);
+          setToast({ message: 'Contact saved to Google Contacts', type: 'success' });
+        } catch (err) {
+          console.error('Failed to save to Google Contacts:', err);
+          downloadVCard(editedData);
+          setToast({ message: 'Contact file downloaded — open to add to Contacts', type: 'success' });
+        }
+      } else {
+        downloadVCard(editedData);
+        setToast({ message: 'Contact file downloaded — open to add to Contacts', type: 'success' });
+      }
     } else {
       // receipt or document → download image
       const imageData = sessionStorage.getItem('snappy_image');
@@ -430,17 +457,46 @@ export default function Result() {
           </>
         ) : (
           <>
-            <Button
-              variant="primary"
-              size="large"
-              fullWidth
-              icon={type === 'receipt' || type === 'document' ? Download : Save}
-              onClick={handleSave}
-            >
-              {type === 'calendar' && events.length > 1
-                ? `Add ${events.length} Events to Calendar`
-                : TYPE_ACTIONS[type]}
-            </Button>
+            {type === 'calendar' ? (
+              <>
+                <Button variant="primary" size="large" fullWidth icon={Save} onClick={handleSave}>
+                  {events.length > 1 ? `Add ${events.length} Events to Google Calendar` : 'Add to Google Calendar'}
+                </Button>
+                <Button variant="secondary" fullWidth icon={Download} onClick={handleSaveIcs}>
+                  {events.length > 1 ? `Download ${events.length} .ics Files` : 'Add to Apple Calendar (.ics)'}
+                </Button>
+              </>
+            ) : type === 'contact' ? (
+              <>
+                <Button
+                  variant="primary"
+                  size="large"
+                  fullWidth
+                  icon={authenticated && provider === 'google' ? Save : Download}
+                  onClick={handleSave}
+                >
+                  {authenticated && provider === 'google' ? 'Add to Google Contacts' : 'Save Contact (.vcf)'}
+                </Button>
+                {authenticated && provider === 'google' && (
+                  <Button variant="secondary" fullWidth icon={Download} onClick={() => {
+                    downloadVCard(editedData);
+                    setToast({ message: 'Contact file downloaded — open to add to Contacts', type: 'success' });
+                  }}>
+                    Download .vcf File
+                  </Button>
+                )}
+              </>
+            ) : (
+              <Button
+                variant="primary"
+                size="large"
+                fullWidth
+                icon={type === 'receipt' || type === 'document' ? Download : Save}
+                onClick={handleSave}
+              >
+                {TYPE_ACTIONS[type]}
+              </Button>
+            )}
             <Button
               variant="secondary"
               fullWidth
