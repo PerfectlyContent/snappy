@@ -8,7 +8,7 @@ import Button from '../components/Common/Button';
 import './Settings.css';
 
 export default function Settings() {
-  const { user, authenticated, provider, login, logout } = useAuth();
+  const { user, authenticated, provider, login, logout, appleEnabled } = useAuth();
   const navigate = useNavigate();
 
   const services = [
@@ -74,14 +74,16 @@ export default function Settings() {
             <Button variant="primary" fullWidth onClick={login}>
               Connect Google Account
             </Button>
-            <Button
-              variant="secondary"
-              fullWidth
-              onClick={() => { window.location.href = '/auth/apple'; }}
-              style={{ marginTop: 'var(--space-2)' }}
-            >
-              Connect Apple Account
-            </Button>
+            {appleEnabled && (
+              <Button
+                variant="secondary"
+                fullWidth
+                onClick={() => { window.location.href = '/auth/apple'; }}
+                style={{ marginTop: 'var(--space-2)' }}
+              >
+                Connect Apple Account
+              </Button>
+            )}
           </>
         )}
       </div>

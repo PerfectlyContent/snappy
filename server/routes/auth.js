@@ -92,6 +92,7 @@ router.get('/status', (req, res) => {
     authenticated,
     provider: req.session.provider || null,
     user: req.session.user || null,
+    appleEnabled: !!process.env.APPLE_CLIENT_ID,
   });
 });
 

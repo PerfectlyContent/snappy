@@ -8,6 +8,7 @@ export function AuthProvider({ children }) {
   const [authenticated, setAuthenticated] = useState(false);
   const [provider, setProvider] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [appleEnabled, setAppleEnabled] = useState(false);
 
   const checkAuth = useCallback(async () => {
     try {
@@ -15,6 +16,7 @@ export function AuthProvider({ children }) {
       setAuthenticated(data.authenticated);
       setUser(data.user);
       setProvider(data.provider || null);
+      setAppleEnabled(!!data.appleEnabled);
     } catch {
       setAuthenticated(false);
       setUser(null);
@@ -48,7 +50,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, authenticated, provider, loading, login, logout, checkAuth }}>
+    <AuthContext.Provider value={{ user, authenticated, provider, loading, login, logout, checkAuth, appleEnabled }}>
       {children}
     </AuthContext.Provider>
   );
