@@ -248,6 +248,7 @@ export default function DailySnap() {
                     Connect
                   </button>
                 ) : null}
+              </div>
             ) : snap.events?.length > 0 ? (
               <div className="dsnap__timeline">
                 {snap.events.map((event, i) => (
