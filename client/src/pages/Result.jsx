@@ -168,15 +168,11 @@ export default function Result() {
       return;
     }
 
-    // Contact → deep link to Google Contacts + save to Library
+    // Contact → deep link to Google Contacts
     if (type === 'contact') {
       const url = buildContactUrl(editedData);
       window.open(url, '_blank');
       setSavedLink(url);
-      // Also save to Library for local reference
-      const imageData = sessionStorage.getItem('snappy_image');
-      const fileName = sessionStorage.getItem('snappy_fileName') || null;
-      saveItem({ type, data: editedData, image: imageData, fileName }).catch(() => {});
       setSaved(true);
       setToast({ message: 'Opened in Google Contacts', type: 'success' });
       logActivity(type, editedData, url);
