@@ -59,7 +59,7 @@ function getDayTypeLabel(dayType) {
 }
 
 export default function DailySnap() {
-  const { authenticated, user, provider, login, loading: authLoading } = useAuth();
+  const { authenticated, user, provider, login, loading: authLoading, calendarConnected, connectCalendar } = useAuth();
   const navigate = useNavigate();
   const [snap, setSnap] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -101,7 +101,7 @@ export default function DailySnap() {
     }
   }, [authenticated, authLoading]);
 
-  const hasGoogleCalendar = authenticated && provider === 'google';
+  const hasGoogleCalendar = calendarConnected;
 
   // Unauthenticated state
   if (!authLoading && !authenticated) {
@@ -238,15 +238,16 @@ export default function DailySnap() {
               <div className="dsnap__calendar-hint">
                 <Calendar size={18} />
                 <div className="dsnap__calendar-hint-text">
-                  <span>Connect Google for calendar insights</span>
+                  <span>Connect Google Calendar</span>
                   <span className="dsnap__calendar-hint-sub">
-                    Sign in with Google to see today's events here.
+                    See today's events and get smarter daily insights.
                   </span>
                 </div>
-                <button className="dsnap__calendar-hint-btn" onClick={login}>
-                  Connect
-                </button>
-              </div>
+                {provider === 'google' ? (
+                  <button className="dsnap__calendar-hint-btn" onClick={connectCalendar}>
+                    Connect
+                  </button>
+                ) : null}
             ) : snap.events?.length > 0 ? (
               <div className="dsnap__timeline">
                 {snap.events.map((event, i) => (

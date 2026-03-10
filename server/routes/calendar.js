@@ -22,6 +22,9 @@ function getGoogleErrorDetail(err) {
 }
 
 router.post('/event', requireAuth, async (req, res) => {
+  if (!req.session.calendarConnected) {
+    return res.status(403).json({ error: 'Calendar not connected', needsCalendarAuth: true });
+  }
   try {
     const auth = getAuthenticatedClient(req.session);
     if (!auth) {
@@ -41,6 +44,9 @@ router.post('/event', requireAuth, async (req, res) => {
 });
 
 router.get('/upcoming', requireAuth, async (req, res) => {
+  if (!req.session.calendarConnected) {
+    return res.status(403).json({ error: 'Calendar not connected', needsCalendarAuth: true });
+  }
   try {
     const auth = getAuthenticatedClient(req.session);
     const events = await getUpcoming(auth);

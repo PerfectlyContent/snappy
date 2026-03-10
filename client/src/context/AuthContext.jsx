@@ -8,6 +8,8 @@ export function AuthProvider({ children }) {
   const [authenticated, setAuthenticated] = useState(false);
   const [provider, setProvider] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [appleEnabled, setAppleEnabled] = useState(false);
+  const [calendarConnected, setCalendarConnected] = useState(false);
 
   const checkAuth = useCallback(async () => {
     try {
@@ -15,6 +17,8 @@ export function AuthProvider({ children }) {
       setAuthenticated(data.authenticated);
       setUser(data.user);
       setProvider(data.provider || null);
+      setAppleEnabled(!!data.appleEnabled);
+      setCalendarConnected(!!data.calendarConnected);
     } catch {
       setAuthenticated(false);
       setUser(null);
@@ -40,6 +44,10 @@ export function AuthProvider({ children }) {
     window.location.href = '/auth/google';
   };
 
+  const connectCalendar = () => {
+    window.location.href = '/auth/google/calendar';
+  };
+
   const logout = async () => {
     await api.logout();
     setAuthenticated(false);
@@ -48,7 +56,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, authenticated, provider, loading, login, logout, checkAuth }}>
+    <AuthContext.Provider value={{ user, authenticated, provider, loading, login, logout, checkAuth, appleEnabled, calendarConnected, connectCalendar }}>
       {children}
     </AuthContext.Provider>
   );

@@ -10,7 +10,7 @@ router.get('/daily', requireAuth, async (req, res) => {
   try {
     // Fetch today's Google Calendar events if the user signed in with Google
     let events = [];
-    if (req.session.provider === 'google' && req.session.tokens) {
+    if (req.session.calendarConnected && req.session.tokens) {
       try {
         const auth = getAuthenticatedClient(req.session);
         events = await getTodayEvents(auth);
