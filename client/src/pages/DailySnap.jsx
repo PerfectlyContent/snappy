@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Sun, Cloud, Sparkles, Calendar, StickyNote,
   MapPin, Clock, RefreshCw, LogIn, ChevronRight,
+  Lightbulb, Link2, Bell, Zap,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
@@ -58,7 +59,7 @@ function getDayTypeLabel(dayType) {
 }
 
 export default function DailySnap() {
-  const { authenticated, user, login, loading: authLoading } = useAuth();
+  const { authenticated, user, provider, login, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [snap, setSnap] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -79,7 +80,7 @@ export default function DailySnap() {
     try {
       const notes = JSON.parse(localStorage.getItem(NOTES_KEY) || '[]');
       const notesParam = encodeURIComponent(JSON.stringify(
-        notes.slice(0, 10).map(n => ({ title: n.title, content: n.content }))
+        notes.slice(0, 10).map(n => ({ title: n.title, content: n.content, source: n.source || 'typed' }))
       ));
       const data = await api.getDailySnap(notesParam);
       setSnap(data);
@@ -100,6 +101,8 @@ export default function DailySnap() {
     }
   }, [authenticated, authLoading]);
 
+  const hasGoogleCalendar = authenticated && provider === 'google';
+
   // Unauthenticated state
   if (!authLoading && !authenticated) {
     return (
@@ -116,8 +119,8 @@ export default function DailySnap() {
             <div className="dsnap__auth-icon">
               <Sparkles size={24} />
             </div>
-            <h3>Connect Google to get your Daily Snap</h3>
-            <p>Sign in to pull your calendar events and get an AI-powered overview of your day.</p>
+            <h3>Get your Daily Snap</h3>
+            <p>Sign in to get an AI-powered overview of your day, with calendar events and notes.</p>
             <Button variant="primary" icon={LogIn} onClick={login}>
               Sign in with Google
             </Button>
@@ -196,15 +199,55 @@ export default function DailySnap() {
             </div>
           </Card>
 
+          {/* Nudges */}
+          {snap.nudges?.length > 0 && (
+            <div className="dsnap__nudges">
+              <div className="dsnap__section-header">
+                <Lightbulb size={16} />
+                <span>Nudges</span>
+              </div>
+              <div className="dsnap__nudges-list">
+                {snap.nudges.map((nudge, i) => (
+                  <div key={i} className={`dsnap__nudge dsnap__nudge--${nudge.type}`}>
+                    <div className="dsnap__nudge-icon">
+                      {nudge.type === 'connection' ? <Link2 size={14} /> :
+                       nudge.type === 'reminder' ? <Bell size={14} /> :
+                       <Zap size={14} />}
+                    </div>
+                    <div className="dsnap__nudge-body">
+                      <p className="dsnap__nudge-text">{nudge.text}</p>
+                      {nudge.noteTitle && (
+                        <span className="dsnap__nudge-source">From note: {nudge.noteTitle}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Timeline */}
           <div className="dsnap__section">
             <div className="dsnap__section-header">
               <Calendar size={16} />
               <span>Today's Schedule</span>
-              <span className="dsnap__count">{snap.eventCount}</span>
+              {hasGoogleCalendar && <span className="dsnap__count">{snap.eventCount}</span>}
             </div>
 
-            {snap.events?.length > 0 ? (
+            {!hasGoogleCalendar ? (
+              <div className="dsnap__calendar-hint">
+                <Calendar size={18} />
+                <div className="dsnap__calendar-hint-text">
+                  <span>Connect Google for calendar insights</span>
+                  <span className="dsnap__calendar-hint-sub">
+                    Sign in with Google to see today's events here.
+                  </span>
+                </div>
+                <button className="dsnap__calendar-hint-btn" onClick={login}>
+                  Connect
+                </button>
+              </div>
+            ) : snap.events?.length > 0 ? (
               <div className="dsnap__timeline">
                 {snap.events.map((event, i) => (
                   <a

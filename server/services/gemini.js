@@ -84,7 +84,11 @@ export async function generateDailySnap(events, notes) {
     : 'No events scheduled today.';
 
   const notesText = notes.length > 0
-    ? notes.map(n => `- ${n.title}${n.content ? ': ' + n.content.slice(0, 120) : ''}`).join('\n')
+    ? notes.map(n => {
+        const tag = n.source === 'voice' ? ' [voice]' : '';
+        const body = n.content ? ': ' + n.content.slice(0, 300) : '';
+        return `- ${n.title}${body}${tag}`;
+      }).join('\n')
     : 'No notes.';
 
   const prompt = dailySnapPrompt

@@ -6,6 +6,7 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [authenticated, setAuthenticated] = useState(false);
+  const [provider, setProvider] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const checkAuth = useCallback(async () => {
@@ -13,9 +14,11 @@ export function AuthProvider({ children }) {
       const data = await api.getAuthStatus();
       setAuthenticated(data.authenticated);
       setUser(data.user);
+      setProvider(data.provider || null);
     } catch {
       setAuthenticated(false);
       setUser(null);
+      setProvider(null);
     } finally {
       setLoading(false);
     }
@@ -41,10 +44,11 @@ export function AuthProvider({ children }) {
     await api.logout();
     setAuthenticated(false);
     setUser(null);
+    setProvider(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, authenticated, loading, login, logout, checkAuth }}>
+    <AuthContext.Provider value={{ user, authenticated, provider, loading, login, logout, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );

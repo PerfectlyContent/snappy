@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Calendar, FileText, User, Receipt, StickyNote,
   Save, Send, ChevronDown, ChevronUp, ExternalLink, AlertTriangle,
-  UserPlus, X, Archive
+  UserPlus, X, Archive, Download
 } from 'lucide-react';
-import { buildCalendarUrl, downloadVCard, downloadImage } from '../utils/export';
+import { buildCalendarUrl, downloadIcsFile, downloadVCard, downloadImage } from '../utils/export';
 import { saveItem } from '../utils/storage';
 import Card from '../components/Common/Card';
 import Button from '../components/Common/Button';
@@ -109,13 +109,24 @@ export default function Result() {
     localStorage.setItem('snappy_activity', JSON.stringify(activity.slice(0, 50)));
   }
 
+  function handleSaveIcs() {
+    const evts = editedData.events || [editedData];
+    downloadIcsFile(evts);
+    const msg = evts.length > 1
+      ? `${evts.length} calendar files downloaded`
+      : 'Calendar file downloaded — open to add to Apple Calendar';
+    setToast({ message: msg, type: 'success' });
+    setSaved(true);
+    logActivity(type, editedData, null);
+  }
+
   async function handleSave() {
     // Notes save to localStorage (existing behavior)
     if (type === 'note') {
       const ts = new Date().toISOString();
       const noteId = Date.now().toString(36);
       const notes = JSON.parse(localStorage.getItem('snappy_notes') || '[]');
-      notes.unshift({ id: noteId, title: editedData.title || 'Untitled', content: editedData.content || '', timestamp: ts });
+      notes.unshift({ id: noteId, title: editedData.title || 'Untitled', content: editedData.content || '', source: 'voice', timestamp: ts });
       localStorage.setItem('snappy_notes', JSON.stringify(notes));
       logActivity('note', editedData, null);
       setSaved(true);
@@ -231,20 +242,21 @@ export default function Result() {
           <div className="result__low-confidence">
             <AlertTriangle size={16} />
             <span>Low confidence — please verify the type</span>
-            <div className="result__type-options">
-              {['calendar', 'receipt', 'contact', 'document', 'note'].map(t => (
-                <button
-                  key={t}
-                  className={`result__type-option ${t === type ? 'result__type-option--active' : ''}`}
-                  onClick={() => setManualType(t)}
-                  aria-pressed={t === type}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
           </div>
         )}
+
+        <div className="result__type-options">
+          {['calendar', 'receipt', 'contact', 'document', 'note'].map(t => (
+            <button
+              key={t}
+              className={`result__type-option ${t === type ? 'result__type-option--active' : ''}`}
+              onClick={() => setManualType(t)}
+              aria-pressed={t === type}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
       </Card>
 
       {/* Fields */}
@@ -440,21 +452,30 @@ export default function Result() {
           </>
         ) : (
           <>
-            <Button
-              variant="primary"
-              size="large"
-              fullWidth
-              icon={saving ? undefined : Save}
-              onClick={handleSave}
-              loading={saving}
-              disabled={saving}
-            >
-              {saving
-                ? 'Saving...'
-                : type === 'calendar' && events.length > 1
-                  ? `Add ${events.length} Events to Calendar`
+            {type === 'calendar' ? (
+              <>
+                <Button variant="primary" size="large" fullWidth icon={Save} onClick={handleSave}>
+                  {events.length > 1 ? `Add ${events.length} Events to Google Calendar` : 'Add to Google Calendar'}
+                </Button>
+                <Button variant="secondary" fullWidth icon={Download} onClick={handleSaveIcs}>
+                  {events.length > 1 ? `Download ${events.length} .ics Files` : 'Add to Apple Calendar (.ics)'}
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="primary"
+                size="large"
+                fullWidth
+                icon={saving ? undefined : Save}
+                onClick={handleSave}
+                loading={saving}
+                disabled={saving}
+              >
+                {saving
+                  ? 'Saving...'
                   : TYPE_ACTIONS[type]}
-            </Button>
+              </Button>
+            )}
             <Button
               variant="secondary"
               fullWidth
