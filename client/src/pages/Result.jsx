@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Calendar, FileText, User, Receipt, StickyNote,
   Save, Send, ChevronDown, ChevronUp, ExternalLink, AlertTriangle,
-  UserPlus, X, Download
+  UserPlus, X, Download, Cloud, HardDrive, Upload
 } from 'lucide-react';
 import { buildCalendarUrl, downloadVCard, downloadImage } from '../utils/export';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../utils/api';
 import Card from '../components/Common/Card';
 import Button from '../components/Common/Button';
 import Badge from '../components/Common/Badge';
@@ -22,22 +24,25 @@ const TYPE_ICONS = {
   note: StickyNote,
 };
 
-const TYPE_ACTIONS = {
-  calendar: 'Add to Calendar',
-  receipt: 'Download Receipt',
-  contact: 'Add to Contacts',
-  document: 'Download Document',
-  note: 'Save Note',
-};
+function getActionLabel(itemType, isAuthenticated) {
+  if (itemType === 'calendar') return 'Add to Calendar';
+  if (itemType === 'note') return 'Save Note';
+  if (itemType === 'receipt') return isAuthenticated ? 'Save Receipt' : 'Download Receipt';
+  if (itemType === 'document') return isAuthenticated ? 'Save Document' : 'Download Document';
+  if (itemType === 'contact') return isAuthenticated ? 'Save Contact' : 'Download Contact';
+  return 'Save';
+}
 
 export default function Result() {
   const navigate = useNavigate();
+  const { authenticated } = useAuth();
   const [result, setResult] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
   const [expanded, setExpanded] = useState(true);
   const [editedData, setEditedData] = useState({});
   const [saved, setSaved] = useState(false);
   const [savedLink, setSavedLink] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [showForward, setShowForward] = useState(false);
   const [showReachOut, setShowReachOut] = useState(false);
   const [toast, setToast] = useState(null);
@@ -101,7 +106,13 @@ export default function Result() {
     setEditedData({ events: updated });
   }
 
-  function handleSave() {
+  function logActivity(activityType, data, link) {
+    const activity = JSON.parse(localStorage.getItem('snappy_activity') || '[]');
+    activity.unshift({ type: activityType, data, link, timestamp: new Date().toISOString() });
+    localStorage.setItem('snappy_activity', JSON.stringify(activity.slice(0, 50)));
+  }
+
+  async function handleSave() {
     // Notes save locally
     if (type === 'note') {
       const ts = new Date().toISOString();
@@ -109,11 +120,7 @@ export default function Result() {
       const notes = JSON.parse(localStorage.getItem('snappy_notes') || '[]');
       notes.unshift({ id: noteId, title: editedData.title || 'Untitled', content: editedData.content || '', timestamp: ts });
       localStorage.setItem('snappy_notes', JSON.stringify(notes));
-
-      const activity = JSON.parse(localStorage.getItem('snappy_activity') || '[]');
-      activity.unshift({ type: 'note', data: editedData, timestamp: ts });
-      localStorage.setItem('snappy_activity', JSON.stringify(activity.slice(0, 50)));
-
+      logActivity('note', editedData, null);
       setSaved(true);
       setToast({ message: 'Note saved', type: 'success' });
       return;
@@ -123,11 +130,9 @@ export default function Result() {
 
     if (type === 'calendar') {
       const evts = editedData.events || [editedData];
-      // Open each event in Google Calendar
       evts.forEach((evt, i) => {
         const url = buildCalendarUrl(evt);
         if (url) {
-          // Small delay between tabs so browser doesn't block them
           setTimeout(() => window.open(url, '_blank'), i * 300);
           if (i === 0) link = url;
         }
@@ -136,11 +141,66 @@ export default function Result() {
         ? `${evts.length} events opened in Google Calendar`
         : 'Opened in Google Calendar';
       setToast({ message: msg, type: 'success' });
-    } else if (type === 'contact') {
+      setSaved(true);
+      setSavedLink(link);
+      logActivity(type, editedData, link);
+      return;
+    }
+
+    // Cloud saves for receipts, documents, and contacts
+    if (authenticated && (type === 'receipt' || type === 'document')) {
+      setSaving(true);
+      try {
+        const imageData = sessionStorage.getItem('snappy_image');
+        const fileName = sessionStorage.getItem('snappy_fileName') || `snappy-${type}-${Date.now()}.png`;
+        const mimeType = imageData?.match(/^data:(image\/\w+);/)?.[1] || 'image/png';
+        const result = await api.uploadBase64ToDrive(imageData, mimeType, type, fileName);
+        link = result.webViewLink;
+        setSaved(true);
+        setSavedLink(link);
+        setToast({ message: `Saved to Google Drive`, type: 'success' });
+        logActivity(type, editedData, link);
+      } catch (err) {
+        // If cloud fails, fall back to local download
+        console.warn('Drive upload failed, falling back to download:', err.message);
+        const imageData = sessionStorage.getItem('snappy_image');
+        const fileName = sessionStorage.getItem('snappy_fileName') || `snappy-${type}.png`;
+        downloadImage(imageData, fileName);
+        setSaved(true);
+        setToast({ message: 'Saved to Downloads (Drive unavailable)', type: 'success' });
+        logActivity(type, editedData, null);
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    if (authenticated && type === 'contact') {
+      setSaving(true);
+      try {
+        const result = await api.createContact(editedData);
+        link = result.contactUrl || null;
+        setSaved(true);
+        setSavedLink(link);
+        setToast({ message: 'Saved to Google Contacts', type: 'success' });
+        logActivity(type, editedData, link);
+      } catch (err) {
+        console.warn('Contact creation failed, falling back to vCard:', err.message);
+        downloadVCard(editedData);
+        setSaved(true);
+        setToast({ message: 'Downloaded vCard (Contacts unavailable)', type: 'success' });
+        logActivity(type, editedData, null);
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    // Fallback: not authenticated — local downloads
+    if (type === 'contact') {
       downloadVCard(editedData);
-      setToast({ message: 'Contact file downloaded — open to add to Contacts', type: 'success' });
+      setToast({ message: 'Contact downloaded as vCard', type: 'success' });
     } else {
-      // receipt or document → download image
       const imageData = sessionStorage.getItem('snappy_image');
       const fileName = sessionStorage.getItem('snappy_fileName') || `snappy-${type}.png`;
       downloadImage(imageData, fileName);
@@ -148,17 +208,7 @@ export default function Result() {
     }
 
     setSaved(true);
-    setSavedLink(link);
-
-    // Add to activity
-    const activity = JSON.parse(localStorage.getItem('snappy_activity') || '[]');
-    activity.unshift({
-      type,
-      data: editedData,
-      link,
-      timestamp: new Date().toISOString(),
-    });
-    localStorage.setItem('snappy_activity', JSON.stringify(activity.slice(0, 50)));
+    logActivity(type, editedData, null);
   }
 
   function renderFields() {
@@ -410,6 +460,28 @@ export default function Result() {
         )}
       </Card>
 
+      {/* Save destination hint */}
+      {!saved && !saving && (type === 'receipt' || type === 'document' || type === 'contact') && (
+        <div className="result__destination">
+          {authenticated ? (
+            <>
+              <Cloud size={14} />
+              <span>
+                {type === 'contact' ? 'Saves to Google Contacts' : `Saves to Google Drive / Snappy / ${type === 'receipt' ? 'Receipts' : 'Documents'}`}
+              </span>
+            </>
+          ) : (
+            <>
+              <HardDrive size={14} />
+              <span>{type === 'contact' ? 'Downloads as vCard' : 'Downloads to your device'}</span>
+              <button className="result__destination-connect" onClick={() => window.location.href = '/auth/google'}>
+                Connect Google
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Actions */}
       <div className={`result__actions ${saved ? 'result__actions--saved' : ''}`}>
         {saved ? (
@@ -424,7 +496,8 @@ export default function Result() {
             </Button>
             {savedLink && (
               <a href={savedLink} target="_blank" rel="noopener noreferrer" className="result__view-link">
-                <ExternalLink size={16} /> Open in Calendar
+                <ExternalLink size={16} />
+                {type === 'calendar' ? 'Open in Calendar' : type === 'contact' ? 'View in Contacts' : 'View in Drive'}
               </a>
             )}
           </>
@@ -434,18 +507,23 @@ export default function Result() {
               variant="primary"
               size="large"
               fullWidth
-              icon={type === 'receipt' || type === 'document' ? Download : Save}
+              icon={saving ? undefined : (authenticated && (type === 'receipt' || type === 'document' || type === 'contact') ? Upload : (type === 'receipt' || type === 'document' ? Download : Save))}
               onClick={handleSave}
+              loading={saving}
+              disabled={saving}
             >
-              {type === 'calendar' && events.length > 1
-                ? `Add ${events.length} Events to Calendar`
-                : TYPE_ACTIONS[type]}
+              {saving
+                ? (type === 'contact' ? 'Saving to Contacts...' : 'Uploading to Drive...')
+                : type === 'calendar' && events.length > 1
+                  ? `Add ${events.length} Events to Calendar`
+                  : getActionLabel(type, authenticated)}
             </Button>
             <Button
               variant="secondary"
               fullWidth
               icon={Send}
               onClick={() => setShowForward(true)}
+              disabled={saving}
             >
               Forward to Someone
             </Button>
