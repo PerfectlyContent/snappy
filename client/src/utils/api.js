@@ -78,17 +78,6 @@ export const api = {
 
   getDriveFolders: () => request('/drive/folders'),
 
-  // Contacts
-  createContact: (contactData) =>
-    request('/contacts/create', {
-      method: 'POST',
-      body: JSON.stringify(contactData),
-    }),
-
-  getRecentContacts: () => request('/contacts/recent'),
-
-  searchContacts: (query) => request(`/contacts/search?q=${encodeURIComponent(query || '')}`),
-
   // Share
   composeMessage: (classificationData) =>
     request('/share/compose', {
