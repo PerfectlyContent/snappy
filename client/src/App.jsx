@@ -22,8 +22,8 @@ function AppRoutes() {
     return <Welcome />;
   }
 
-  // Redirect unauthenticated users to Welcome page
-  if (!authenticated && location.pathname === '/') {
+  // Redirect unauthenticated users to Welcome page (unless they chose guest mode)
+  if (!authenticated && location.pathname === '/' && !sessionStorage.getItem('guest')) {
     return <Navigate to="/welcome" replace />;
   }
 

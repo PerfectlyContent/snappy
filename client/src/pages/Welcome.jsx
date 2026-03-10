@@ -25,6 +25,7 @@ export default function Welcome() {
 
   function handleGuestContinue(e) {
     e.preventDefault();
+    sessionStorage.setItem('guest', 'true');
     navigate('/');
   }
 
