@@ -1,22 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Send, Mail, MessageCircle, Smartphone } from 'lucide-react';
+import { Share2 } from 'lucide-react';
 import { api } from '../../utils/api';
 import Modal from '../Common/Modal';
-import Input from '../Common/Input';
 import { TextArea } from '../Common/Input';
 import Button from '../Common/Button';
 import Toast from '../Common/Toast';
-import './ReachOutModal.css';
-
-const CHANNELS = [
-  { id: 'email', label: 'Email', icon: Mail },
-  { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle },
-  { id: 'sms', label: 'SMS', icon: Smartphone },
-];
+import './ShareModal.css';
 
 export default function ShareModal({ classificationData, onClose, onSent }) {
-  const [channel, setChannel] = useState('email');
-  const [to, setTo] = useState('');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [composing, setComposing] = useState(true);
@@ -51,84 +42,57 @@ export default function ShareModal({ classificationData, onClose, onSent }) {
     return () => { cancelled = true; };
   }, [classificationData, title]);
 
-  const needsRecipient = !to.trim();
-  const canSend = body.trim() && !needsRecipient;
+  async function handleShare() {
+    const shareText = body.trim();
+    if (!shareText) return;
 
-  function cleanPhone(ph) {
-    return ph.replace(/[\s\-()]/g, '');
-  }
-
-  function handleSend() {
-    if (!canSend) return;
-
-    if (channel === 'email') {
-      const mailto = `mailto:${encodeURIComponent(to.trim())}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      window.open(mailto, '_blank');
-    } else if (channel === 'whatsapp') {
-      window.open(`https://wa.me/${cleanPhone(to)}?text=${encodeURIComponent(body)}`, '_blank');
-    } else if (channel === 'sms') {
-      window.open(`sms:${cleanPhone(to)}?body=${encodeURIComponent(body)}`, '_blank');
+    // Use native Web Share API (opens the OS share sheet)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: subject,
+          text: shareText,
+        });
+        if (onSent) onSent();
+        return;
+      } catch (err) {
+        // User cancelled the share sheet — not an error
+        if (err.name === 'AbortError') return;
+      }
     }
 
-    if (onSent) onSent();
+    // Fallback for desktop browsers without Web Share API:
+    // copy to clipboard so user can paste into any app
+    try {
+      const fullText = subject ? `${subject}\n\n${shareText}` : shareText;
+      await navigator.clipboard.writeText(fullText);
+      setToast({ message: 'Copied to clipboard', type: 'success' });
+      setTimeout(() => { if (onSent) onSent(); }, 1200);
+    } catch {
+      setToast({ message: 'Could not share — try copying manually', type: 'error' });
+    }
   }
-
-  const sendLabel = {
-    email: 'Open Email',
-    whatsapp: 'Open WhatsApp',
-    sms: 'Open Messages',
-  };
-
-  const recipientPlaceholder = channel === 'email' ? 'email@example.com' : 'Phone number';
-  const recipientType = channel === 'email' ? 'email' : 'tel';
 
   return (
     <Modal title="Share" onClose={onClose}>
-      <div className="reachout">
-        <div className="reachout__tabs">
-          {CHANNELS.map(ch => (
-            <button
-              key={ch.id}
-              className={`reachout__tab ${channel === ch.id ? 'reachout__tab--active' : ''}`}
-              onClick={() => setChannel(ch.id)}
-              aria-pressed={channel === ch.id}
-            >
-              <ch.icon size={14} />
-              <span>{ch.label}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="reachout__recipient-row">
-          <span className="reachout__recipient-label">To:</span>
-          <input
-            className="reachout__recipient-input"
-            type={recipientType}
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            placeholder={recipientPlaceholder}
-          />
-        </div>
-
+      <div className="share-modal">
         {composing ? (
-          <div className="reachout__composing">
-            <div className="reachout__composing-dot" />
+          <div className="share-modal__composing">
+            <div className="share-modal__composing-dot" />
             <span>Snappy is writing...</span>
           </div>
         ) : (
           <>
-            {channel === 'email' && (
-              <Input
-                label="Subject"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-              />
-            )}
+            <div className="share-modal__preview-label">Preview</div>
+            <div className="share-modal__preview">
+              {subject && <p className="share-modal__preview-subject">{subject}</p>}
+              <p className="share-modal__preview-body">{body}</p>
+            </div>
             <TextArea
-              label="Message"
+              label="Edit message"
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              rows={4}
+              rows={3}
             />
           </>
         )}
@@ -136,11 +100,11 @@ export default function ShareModal({ classificationData, onClose, onSent }) {
         <Button
           variant="primary"
           fullWidth
-          icon={Send}
-          disabled={composing || !canSend}
-          onClick={handleSend}
+          icon={Share2}
+          disabled={composing || !body.trim()}
+          onClick={handleShare}
         >
-          {sendLabel[channel]}
+          {navigator.share ? 'Share' : 'Copy to Clipboard'}
         </Button>
       </div>
 
