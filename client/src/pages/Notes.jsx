@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { StickyNote, Plus, Trash2, Check, X, ChevronDown, Mic } from 'lucide-react';
+import { StickyNote, Plus, Trash2, Check, X, ChevronDown, Mic, Loader } from 'lucide-react';
 import Card from '../components/Common/Card';
 import Button from '../components/Common/Button';
 import Toast from '../components/Common/Toast';
@@ -29,14 +29,15 @@ export default function Notes() {
   const titleRef = useRef(null);
 
   const [voiceSource, setVoiceSource] = useState(false);
+  const [classifying, setClassifying] = useState(false);
 
   const handleVoiceComplete = useCallback(async (text) => {
     setComposing(true);
     setContent(text);
     setTitle('');
     setVoiceSource(true);
+    setClassifying(true);
 
-    // Auto-generate a title using the classify API
     try {
       const result = await api.classifyVoice(text);
       if (result?.type === 'note' && result?.data?.title) {
@@ -46,8 +47,10 @@ export default function Notes() {
         setContent(result.data.content);
       }
     } catch (err) {
-      // Silently fail — user can still type a title manually
       console.warn('Auto-title generation failed:', err);
+      setToast({ message: 'Could not generate title — add one manually', type: 'error' });
+    } finally {
+      setClassifying(false);
     }
   }, []);
 
@@ -101,8 +104,7 @@ export default function Notes() {
     setToast({ message: 'Reminder deleted', type: 'success' });
   }
 
-  function handleToggleCompleted(id, e) {
-    e.stopPropagation();
+  function handleToggleCompleted(id) {
     const updated = notes.map(n =>
       n.id === id ? { ...n, completed: !n.completed } : n
     );
@@ -138,6 +140,68 @@ export default function Notes() {
     if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
     return d.toLocaleDateString();
+  }
+
+  function renderNoteCard(note) {
+    return (
+      <div key={note.id} className={`notes__card-wrap ${note.completed ? 'notes__card-wrap--completed' : ''}`}>
+        <div className="notes__card-row">
+          <button
+            className={`notes__checkbox ${note.completed ? 'notes__checkbox--checked' : ''}`}
+            onClick={() => handleToggleCompleted(note.id)}
+            aria-label={note.completed ? 'Mark as incomplete' : 'Mark as complete'}
+          >
+            <span className="notes__checkbox-box">
+              {note.completed && <Check size={12} strokeWidth={3} />}
+            </span>
+          </button>
+          <button
+            className={`notes__card ${expandedId === note.id ? 'notes__card--expanded' : ''}`}
+            onClick={() => handleExpand(note.id)}
+            aria-expanded={expandedId === note.id}
+          >
+            <div className="notes__card-info">
+              <span className={`notes__card-title ${note.completed ? 'notes__card-title--completed' : ''}`}>{note.title}</span>
+              <span className="notes__card-time">{formatTime(note.timestamp)}</span>
+            </div>
+            {expandedId !== note.id && note.content && (
+              <p className={`notes__card-preview ${note.completed ? 'notes__card-preview--completed' : ''}`}>{note.content}</p>
+            )}
+          </button>
+          <ChevronDown
+            size={16}
+            className={`notes__card-chevron ${expandedId === note.id ? 'notes__card-chevron--up' : ''}`}
+            onClick={() => handleExpand(note.id)}
+          />
+        </div>
+
+        {expandedId === note.id && (
+          <div className="notes__card-edit">
+            <input
+              className="notes__edit-title"
+              value={editData.title || ''}
+              onChange={(e) => setEditData(prev => ({ ...prev, title: e.target.value }))}
+              placeholder="Title"
+            />
+            <textarea
+              className="notes__edit-content"
+              value={editData.content || ''}
+              rows={4}
+              onChange={(e) => setEditData(prev => ({ ...prev, content: e.target.value }))}
+              placeholder="Reminder content"
+            />
+            <div className="notes__card-actions">
+              <Button variant="primary" size="small" icon={Check} onClick={() => handleSaveEdit(note.id)}>
+                Save
+              </Button>
+              <button className="notes__delete-btn" onClick={() => handleDelete(note.id)} aria-label="Delete reminder">
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   }
 
   return (
@@ -179,13 +243,16 @@ export default function Notes() {
       {composing && (
         <Card className="notes__composer" padding="none">
           <div className="notes__composer-inner">
-            <input
-              ref={titleRef}
-              className="notes__composer-title"
-              placeholder="Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
+            <div className="notes__composer-title-row">
+              <input
+                ref={titleRef}
+                className="notes__composer-title"
+                placeholder={classifying ? 'Generating title...' : 'Title'}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+              {classifying && <Loader size={16} className="notes__composer-spinner" />}
+            </div>
             <textarea
               className="notes__composer-content"
               placeholder="Write your reminder..."
@@ -230,70 +297,21 @@ export default function Notes() {
         </div>
       ) : (
         <div className="notes__list">
-          {notes.map((note) => (
-            <div key={note.id} className={`notes__card-wrap ${note.completed ? 'notes__card-wrap--completed' : ''}`}>
-              <button
-                className={`notes__card ${expandedId === note.id ? 'notes__card--expanded' : ''}`}
-                onClick={() => handleExpand(note.id)}
-                aria-expanded={expandedId === note.id}
-              >
-                <div className="notes__card-header">
-                  <label
-                    className={`notes__checkbox ${note.completed ? 'notes__checkbox--checked' : ''}`}
-                    onClick={(e) => handleToggleCompleted(note.id, e)}
-                    aria-label={note.completed ? 'Mark as incomplete' : 'Mark as complete'}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={!!note.completed}
-                      onChange={() => {}}
-                      tabIndex={-1}
-                    />
-                    <span className="notes__checkbox-box">
-                      {note.completed && <Check size={12} strokeWidth={3} />}
-                    </span>
-                  </label>
-                  <div className="notes__card-info">
-                    <span className={`notes__card-title ${note.completed ? 'notes__card-title--completed' : ''}`}>{note.title}</span>
-                    <span className="notes__card-time">{formatTime(note.timestamp)}</span>
+          {(() => {
+            const active = notes.filter(n => !n.completed);
+            const completed = notes.filter(n => n.completed);
+            return (
+              <>
+                {active.map((note) => renderNoteCard(note))}
+                {completed.length > 0 && active.length > 0 && (
+                  <div className="notes__section-divider">
+                    <span>Completed</span>
                   </div>
-                  <ChevronDown
-                    size={16}
-                    className={`notes__card-chevron ${expandedId === note.id ? 'notes__card-chevron--up' : ''}`}
-                  />
-                </div>
-                {expandedId !== note.id && note.content && (
-                  <p className={`notes__card-preview ${note.completed ? 'notes__card-preview--completed' : ''}`}>{note.content}</p>
                 )}
-              </button>
-
-              {expandedId === note.id && (
-                <div className="notes__card-edit">
-                  <input
-                    className="notes__edit-title"
-                    value={editData.title || ''}
-                    onChange={(e) => setEditData(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Title"
-                  />
-                  <textarea
-                    className="notes__edit-content"
-                    value={editData.content || ''}
-                    rows={4}
-                    onChange={(e) => setEditData(prev => ({ ...prev, content: e.target.value }))}
-                    placeholder="Reminder content"
-                  />
-                  <div className="notes__card-actions">
-                    <Button variant="primary" size="small" icon={Check} onClick={() => handleSaveEdit(note.id)}>
-                      Save
-                    </Button>
-                    <button className="notes__delete-btn" onClick={() => handleDelete(note.id)} aria-label="Delete reminder">
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+                {completed.map((note) => renderNoteCard(note))}
+              </>
+            );
+          })()}
         </div>
       )}
 
