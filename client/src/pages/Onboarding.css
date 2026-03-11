@@ -176,153 +176,15 @@
 }
 
 /* ==============================
-   Illustrations — shared
+   Hero image
    ============================== */
 
-.onb__illust {
-  position: relative;
+.onb__hero-img {
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.onb__illust-bg {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: var(--accent-subtle);
-  filter: blur(40px);
-  transform: scale(0.85);
-}
-
-/* Floating badge */
-.onb__float {
-  position: absolute;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-full);
-  background: var(--bg-elevated);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-md);
-  color: var(--accent);
-  z-index: 2;
-}
-
-.onb__float--tr {
-  top: 8%;
-  right: 10%;
-}
-
-.onb__float--bl {
-  bottom: 14%;
-  left: 10%;
-}
-
-/* ---- Slide 1: Capture ---- */
-
-.onb__illust--capture .onb__illust-inner {
-  width: 70%;
-  height: 70%;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-light) 0%, rgba(124, 58, 237, 0.03) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  z-index: 1;
-}
-
-.onb__illust--capture .onb__illust-shape {
-  width: 50%;
-  height: 50%;
+  object-fit: contain;
   border-radius: var(--radius-2xl);
-  background: linear-gradient(135deg, var(--accent) 0%, rgba(124, 58, 237, 0.6) 100%);
-  opacity: 0.15;
-  transform: rotate(12deg);
 }
-
-/* ---- Slide 2: Organize ---- */
-
-.onb__illust--organize .onb__illust-inner {
-  width: 75%;
-  height: 75%;
-  border-radius: var(--radius-3xl);
-  border: 1px solid var(--accent-light);
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  z-index: 1;
-  overflow: hidden;
-}
-
-.onb__illust-card {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.onb__illust-center-icon {
-  color: var(--accent);
-  opacity: 0.6;
-}
-
-/* ---- Slide 3: Glance (concentric rings) ---- */
-
-.onb__rings {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.onb__ring {
-  border-radius: 50%;
-  border: 1px solid var(--accent-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.onb__ring--outer {
-  width: 240px;
-  height: 240px;
-}
-
-.onb__ring--mid {
-  width: 176px;
-  height: 176px;
-  border-color: rgba(124, 58, 237, 0.18);
-}
-
-.onb__ring--inner {
-  width: 112px;
-  height: 112px;
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(124, 58, 237, 0.04) 100%);
-  border: none;
-  color: var(--accent);
-}
-
-/* Orbiting icons */
-.onb__orbit {
-  position: absolute;
-  color: var(--accent);
-  opacity: 0.5;
-  animation: onbPulse 3s ease-in-out infinite;
-  z-index: 2;
-}
-
-.onb__orbit--1 { top: 6%; left: 20%; animation-delay: 0s; }
-.onb__orbit--2 { bottom: 12%; right: 14%; animation-delay: 0.5s; }
-.onb__orbit--3 { top: 50%; right: -2%; transform: translateY(-50%); animation-delay: 1s; }
-.onb__orbit--4 { top: 50%; left: -2%; transform: translateY(-50%); animation-delay: 1.5s; }
 
 /* ==============================
    Animations
@@ -337,9 +199,4 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-@keyframes onbPulse {
-  0%, 100% { opacity: 0.45; }
-  50% { opacity: 0.75; }
 }

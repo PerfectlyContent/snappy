@@ -1,99 +1,25 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Camera, Mic, Sparkles, ArrowRight,
-  Cloud, Calendar, HardDrive, StickyNote, Infinity,
-} from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import './Onboarding.css';
 
 const SLIDES = [
   {
     title: 'Capture anything.',
     subtitle: 'Snap a photo or use your voice, Snappy figures out what it is for you.',
-    illustration: 'capture',
+    image: '/onboarding-1.png',
   },
   {
     title: 'Snappy sorts it out.',
     subtitle: 'It recognizes what you captured and sends it to the right place — events, contacts, receipts, reminders, and more.',
-    illustration: 'organize',
+    image: '/onboarding-2.png',
   },
   {
     title: 'See your day at a glance.',
     subtitle: 'Get a smart daily summary based on your calendar and reminders, all in one place.',
-    illustration: 'glance',
+    image: '/onboarding-3.png',
   },
 ];
-
-function IllustrationCapture() {
-  return (
-    <div className="onb__illust onb__illust--capture">
-      <div className="onb__illust-bg" />
-      <div className="onb__illust-inner">
-        <div className="onb__illust-shape" />
-      </div>
-      <div className="onb__float onb__float--tr">
-        <Mic size={20} strokeWidth={1.5} />
-      </div>
-      <div className="onb__float onb__float--bl">
-        <Camera size={20} strokeWidth={1.5} />
-      </div>
-    </div>
-  );
-}
-
-function IllustrationOrganize() {
-  return (
-    <div className="onb__illust onb__illust--organize">
-      <div className="onb__illust-bg" />
-      <div className="onb__illust-inner">
-        <div className="onb__illust-card">
-          <Sparkles size={32} strokeWidth={1.2} className="onb__illust-center-icon" />
-        </div>
-      </div>
-      <div className="onb__float onb__float--tr">
-        <Mic size={20} strokeWidth={1.5} />
-      </div>
-      <div className="onb__float onb__float--bl">
-        <Camera size={20} strokeWidth={1.5} />
-      </div>
-    </div>
-  );
-}
-
-function IllustrationGlance() {
-  return (
-    <div className="onb__illust onb__illust--glance">
-      <div className="onb__illust-bg" />
-      <div className="onb__rings">
-        <div className="onb__ring onb__ring--outer">
-          <div className="onb__ring onb__ring--mid">
-            <div className="onb__ring onb__ring--inner">
-              <Infinity size={28} strokeWidth={1.5} />
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="onb__orbit onb__orbit--1">
-        <Cloud size={20} strokeWidth={1.5} />
-      </div>
-      <div className="onb__orbit onb__orbit--2">
-        <Calendar size={20} strokeWidth={1.5} />
-      </div>
-      <div className="onb__orbit onb__orbit--3">
-        <HardDrive size={20} strokeWidth={1.5} />
-      </div>
-      <div className="onb__orbit onb__orbit--4">
-        <StickyNote size={20} strokeWidth={1.5} />
-      </div>
-    </div>
-  );
-}
-
-const ILLUSTRATIONS = {
-  capture: IllustrationCapture,
-  organize: IllustrationOrganize,
-  glance: IllustrationGlance,
-};
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -142,7 +68,6 @@ export default function Onboarding() {
   }
 
   const slide = SLIDES[current];
-  const Illust = ILLUSTRATIONS[slide.illustration];
   const isLast = current === SLIDES.length - 1;
 
   return (
@@ -163,7 +88,12 @@ export default function Onboarding() {
       >
         {/* Illustration hero */}
         <div key={`illust-${current}`} className="onb__hero">
-          <Illust />
+          <img
+            className="onb__hero-img"
+            src={slide.image}
+            alt={slide.title}
+            draggable={false}
+          />
         </div>
 
         {/* Copy */}
