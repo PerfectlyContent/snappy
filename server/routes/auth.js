@@ -14,6 +14,10 @@ router.get('/google', (req, res) => {
 });
 
 router.get('/google/calendar', (req, res) => {
+  // Already connected — no need to re-consent
+  if (req.session.calendarConnected) {
+    return res.redirect(`${process.env.FRONTEND_URL}?auth=success`);
+  }
   const client = createOAuth2Client();
   const url = getAuthUrl(client, {
     scopes: [CALENDAR_SCOPE],

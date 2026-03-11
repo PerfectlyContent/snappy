@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
-  LogOut, Calendar, HardDrive, Users, Check,
+  LogOut, Calendar, Check,
   Shield, Trash2, Info, ExternalLink
 } from 'lucide-react';
 import Button from '../components/Common/Button';
@@ -42,18 +42,6 @@ export default function Settings() {
       desc: calendarConnected ? 'Connected' : 'Add events and reminders',
       connected: calendarConnected,
       onConnect: provider === 'google' && !calendarConnected ? connectCalendar : null,
-    },
-    {
-      icon: HardDrive,
-      label: 'Drive',
-      desc: authenticated ? 'Connected' : 'Save receipts and documents',
-      connected: authenticated,
-    },
-    {
-      icon: Users,
-      label: 'Contacts',
-      desc: authenticated ? 'Connected' : 'Save business cards',
-      connected: authenticated,
     },
   ];
 
