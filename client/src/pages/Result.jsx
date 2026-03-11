@@ -35,12 +35,12 @@ const TYPE_ACTIONS = {
   receipt: 'Save Receipt',
   contact: 'Save Contact',
   document: 'Save Document',
-  note: 'Save Note',
+  note: 'Save Reminder',
   ticket: 'Save Ticket',
   recipe: 'Save Recipe',
   prescription: 'Save Prescription',
   product: 'Save Product',
-  handwriting: 'Save Note',
+  handwriting: 'Save Reminder',
   screenshot: 'Save Screenshot',
 };
 
@@ -140,11 +140,11 @@ export default function Result() {
       const ts = new Date().toISOString();
       const noteId = Date.now().toString(36);
       const notes = JSON.parse(localStorage.getItem('snappy_notes') || '[]');
-      notes.unshift({ id: noteId, title: editedData.title || 'Untitled', content: editedData.content || '', source: 'voice', timestamp: ts });
+      notes.unshift({ id: noteId, title: editedData.title || 'Untitled', content: editedData.content || '', source: 'voice', completed: false, timestamp: ts });
       localStorage.setItem('snappy_notes', JSON.stringify(notes));
       logActivity('note', editedData, null);
       setSaved(true);
-      setToast({ message: 'Note saved', type: 'success' });
+      setToast({ message: 'Reminder saved', type: 'success' });
       return;
     }
 
@@ -321,7 +321,7 @@ export default function Result() {
                   />
                 </div>
                 <div className="result__field">
-                  <label className="result__field-label">Note</label>
+                  <label className="result__field-label">Reminder</label>
                   <textarea
                     className="result__field-textarea"
                     value={editedData.content || ''}

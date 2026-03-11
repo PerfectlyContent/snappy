@@ -204,16 +204,58 @@
   gap: var(--space-3);
 }
 
-.notes__card-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-md);
+/* Checkbox */
+
+.notes__checkbox {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: rgba(234, 179, 8, 0.08);
-  color: #CA8A04;
+  cursor: pointer;
+}
+
+.notes__checkbox input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.notes__checkbox-box {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--label-quaternary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--duration-fast) var(--ease-snappy);
+  color: transparent;
+}
+
+.notes__checkbox:hover .notes__checkbox-box {
+  border-color: var(--accent);
+}
+
+.notes__checkbox--checked .notes__checkbox-box {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.notes__card-wrap--completed {
+  opacity: 0.6;
+}
+
+.notes__card-title--completed {
+  text-decoration: line-through;
+  color: var(--label-tertiary);
+}
+
+.notes__card-preview--completed {
+  text-decoration: line-through;
+  color: var(--label-quaternary);
 }
 
 .notes__card-info {

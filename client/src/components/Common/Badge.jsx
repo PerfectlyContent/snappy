@@ -5,7 +5,7 @@ const TYPE_CONFIG = {
   receipt: { label: 'Receipt', color: 'green' },
   contact: { label: 'Contact', color: 'purple' },
   document: { label: 'Document', color: 'orange' },
-  note: { label: 'Note', color: 'yellow' },
+  note: { label: 'Reminder', color: 'yellow' },
   ticket: { label: 'Ticket', color: 'pink' },
   recipe: { label: 'Recipe', color: 'red' },
   prescription: { label: 'Prescription', color: 'teal' },

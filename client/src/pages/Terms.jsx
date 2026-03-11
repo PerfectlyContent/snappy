@@ -21,7 +21,7 @@ export default function Terms() {
           <p>
             Snappy is an AI-powered filing assistant that helps you classify photos and
             voice memos and save them to Google Calendar, Google Drive, Google Contacts,
-            or personal notes.
+            or personal reminders.
           </p>
         </section>
 
@@ -59,7 +59,7 @@ export default function Terms() {
           <h2>Data and Privacy</h2>
           <p>
             Your photos and voice memos are processed in memory and not stored on our
-            servers. Notes and activity history are stored locally on your device.
+            servers. Reminders and activity history are stored locally on your device.
             See our <a href="/privacy" style={{ color: 'var(--accent)' }}>Privacy Policy</a> for
             full details.
           </p>
