@@ -179,16 +179,22 @@ export function downloadVCard(contact) {
   const blob = new Blob([vcard], { type: 'text/vcard' });
   const name = (contact.name || 'contact').replace(/[^a-zA-Z0-9]/g, '_');
 
-  // Use <a download> click — triggers the OS file handler for .vcf
-  // (same pattern as ICS downloads which work reliably)
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${name}.vcf`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+  // Try opening the .vcf directly so the OS shows the "Add to Contacts" card.
+  // On iOS Safari and many Android browsers, navigating to a vcf blob opens
+  // the native contact creation UI with all fields pre-filled.
+  // Falls back to <a download> if window.open is blocked.
+  const opened = window.open(url, '_blank');
+  if (!opened) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${name}.vcf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
 // ── File download (receipts/documents) ────────────────────────
