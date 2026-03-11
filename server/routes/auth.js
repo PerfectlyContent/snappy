@@ -45,9 +45,12 @@ router.get('/google/callback', async (req, res) => {
     req.session.tokens = tokens;
     req.session.provider = 'google';
 
-    // Detect if calendar scope was granted
+    // Detect if any calendar scope was granted
     const grantedScopes = (tokens.scope || '').split(' ');
-    if (grantedScopes.includes(CALENDAR_SCOPE)) {
+    const hasCalendar = grantedScopes.some(s =>
+      s.includes('calendar')
+    );
+    if (hasCalendar) {
       req.session.calendarConnected = true;
     }
 
