@@ -15,11 +15,11 @@ export function createOAuth2Client() {
   );
 }
 
-export function getAuthUrl(oauth2Client, { scopes, includeGrantedScopes = false } = {}) {
+export function getAuthUrl(oauth2Client, { scopes, includeGrantedScopes = false, prompt = 'consent' } = {}) {
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: scopes,
-    prompt: 'consent',
+    prompt,
     include_granted_scopes: includeGrantedScopes,
   });
 }
