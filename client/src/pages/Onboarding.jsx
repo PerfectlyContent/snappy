@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Sparkles, Calendar } from 'lucide-react';
+import { Camera, Sparkles, FolderOpen } from 'lucide-react';
 import './Onboarding.css';
 
 const SLIDES = [
@@ -8,22 +8,25 @@ const SLIDES = [
     icon: Camera,
     color: '#7C3AED',
     bg: 'rgba(124, 58, 237, 0.08)',
-    title: 'Snap anything',
-    subtitle: 'Point your camera at receipts, contacts, notes, or events — Snappy classifies and organizes them instantly with AI.',
+    title: 'Snap it, sorted',
+    subtitle: 'Take a photo of anything — a receipt, a flyer, a business card — and AI files it for you in seconds.',
+    hint: 'Receipts, contacts, events, notes & more',
   },
   {
     icon: Sparkles,
-    color: '#7C3AED',
-    bg: 'rgba(124, 58, 237, 0.08)',
-    title: 'Your calm daily briefing',
-    subtitle: 'Each morning, get a personalized overview of your day — calendar events, reminders, and gentle nudges, all in one place.',
+    color: '#F59E0B',
+    bg: 'rgba(245, 158, 11, 0.08)',
+    title: 'Start every day clear',
+    subtitle: 'A quiet daily briefing that connects your calendar, reminders, and notes into one calm overview.',
+    hint: 'Calendar + reminders + smart nudges',
   },
   {
-    icon: Calendar,
+    icon: FolderOpen,
     color: '#22C55E',
     bg: 'rgba(34, 197, 94, 0.08)',
-    title: 'Everything in its place',
-    subtitle: 'Photos become calendar events, contacts, or saved documents. Voice notes turn into reminders. Nothing gets lost.',
+    title: 'Nothing gets lost',
+    subtitle: 'Every snap is searchable in your library. Voice notes become reminders. Events land in your calendar.',
+    hint: 'Library, voice capture & calendar sync',
   },
 ];
 
@@ -38,8 +41,10 @@ export default function Onboarding() {
     requestAnimationFrame(() => setEntered(true));
   }, []);
 
+  const touchStart = useRef(null);
+
   const goTo = useCallback((index) => {
-    if (animating || index === current) return;
+    if (animating || index === current || index < 0 || index >= SLIDES.length) return;
     setDirection(index > current ? 'next' : 'prev');
     setAnimating(true);
     setCurrent(index);
@@ -59,6 +64,19 @@ export default function Onboarding() {
     navigate('/welcome', { replace: true });
   }
 
+  function onTouchStart(e) {
+    touchStart.current = e.touches[0].clientX;
+  }
+
+  function onTouchEnd(e) {
+    if (touchStart.current === null) return;
+    const diff = touchStart.current - e.changedTouches[0].clientX;
+    touchStart.current = null;
+    if (Math.abs(diff) < 50) return;
+    if (diff > 0) goTo(current + 1);
+    else goTo(current - 1);
+  }
+
   const slide = SLIDES[current];
   const SlideIcon = slide.icon;
   const isLast = current === SLIDES.length - 1;
@@ -71,7 +89,11 @@ export default function Onboarding() {
       </button>
 
       {/* Slide content */}
-      <div className="onb__content">
+      <div
+        className="onb__content"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
         <div
           key={current}
           className={`onb__slide onb__slide--${direction}`}
@@ -80,10 +102,11 @@ export default function Onboarding() {
             className="onb__icon-wrap"
             style={{ background: slide.bg }}
           >
-            <SlideIcon size={32} color={slide.color} strokeWidth={1.5} />
+            <SlideIcon size={28} color={slide.color} strokeWidth={1.5} />
           </div>
           <h1 className="onb__title">{slide.title}</h1>
           <p className="onb__subtitle">{slide.subtitle}</p>
+          <span className="onb__hint">{slide.hint}</span>
         </div>
       </div>
 
