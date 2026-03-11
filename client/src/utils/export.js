@@ -178,17 +178,16 @@ export function downloadVCard(contact) {
   const vcard = buildVCard(contact);
   const blob = new Blob([vcard], { type: 'text/vcard' });
   const name = (contact.name || 'contact').replace(/[^a-zA-Z0-9]/g, '_');
-  const file = new File([blob], `${name}.vcf`, { type: 'text/vcard' });
 
-  // Try Web Share API first (mobile) — opens contact app directly
-  if (navigator.canShare?.({ files: [file] })) {
-    navigator.share({ files: [file] }).catch(() => {});
-    return;
-  }
-
-  // Fallback: open blob URL so OS handles the VCF
+  // Use <a download> click — triggers the OS file handler for .vcf
+  // (same pattern as ICS downloads which work reliably)
   const url = URL.createObjectURL(blob);
-  window.open(url, '_blank');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${name}.vcf`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 

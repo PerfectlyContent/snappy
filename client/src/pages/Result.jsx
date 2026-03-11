@@ -4,7 +4,7 @@ import {
   ArrowLeft, Calendar, FileText, User, Receipt, StickyNote,
   Save, Share2, ChevronDown, ChevronUp, ExternalLink, AlertTriangle,
   UserPlus, X, Archive, Download, Ticket, CookingPot, Pill,
-  Package, PenLine, Monitor, Send
+  Package, PenLine, Monitor
 } from 'lucide-react';
 import { buildCalendarUrl, buildContactUrl, downloadIcsFile, downloadVCard, downloadImage } from '../utils/export';
 import { saveItem } from '../utils/storage';
@@ -467,7 +467,7 @@ export default function Result() {
         {saved ? (
           <>
             {type === 'contact' && (editedData.email || editedData.phone) && (
-              <Button variant="primary" fullWidth icon={Send} onClick={() => setShowReachOut(true)}>
+              <Button variant="primary" fullWidth icon={Share2} onClick={() => setShowReachOut(true)}>
                 Reach Out
               </Button>
             )}

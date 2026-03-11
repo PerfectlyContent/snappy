@@ -85,12 +85,6 @@ export const api = {
       body: JSON.stringify({ classificationData }),
     }),
 
-  sendMessage: (to, subject, body) =>
-    request('/share/send', {
-      method: 'POST',
-      body: JSON.stringify({ to, subject, body }),
-    }),
-
   composeReachOut: (contactData, channel) =>
     request('/share/compose-reachout', {
       method: 'POST',

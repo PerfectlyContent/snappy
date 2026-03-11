@@ -1,30 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Send, Mail, MessageCircle, Smartphone, Mic } from 'lucide-react';
+import { Share2, Mail, MessageCircle, Smartphone, Mic } from 'lucide-react';
 import { api } from '../../utils/api';
 import { useVoice } from '../../hooks/useVoice';
 import Modal from '../Common/Modal';
-import Input from '../Common/Input';
 import { TextArea } from '../Common/Input';
 import Button from '../Common/Button';
 import Toast from '../Common/Toast';
 import './ReachOutModal.css';
 
-const CHANNELS = [
-  { id: 'email', label: 'Email', icon: Mail },
-  { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle },
-  { id: 'sms', label: 'SMS', icon: Smartphone },
-];
-
 export default function ReachOutModal({ contactData, onClose }) {
-  const [email, setEmail] = useState(contactData?.email || '');
-  const [phone, setPhone] = useState(contactData?.phone || '');
-
-  const defaultChannel = email ? 'email' : phone ? 'whatsapp' : 'email';
-  const [channel, setChannel] = useState(defaultChannel);
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [composing, setComposing] = useState(true);
-  const [sending, setSending] = useState(false);
   const [toast, setToast] = useState(null);
 
   const handleVoiceComplete = useCallback((text) => {
@@ -45,7 +32,7 @@ export default function ReachOutModal({ contactData, onClose }) {
     async function compose() {
       setComposing(true);
       try {
-        const msg = await api.composeReachOut(contactData, channel);
+        const msg = await api.composeReachOut(contactData, 'email');
         if (!cancelled) {
           setSubject(msg.subject || '');
           setBody(msg.body || '');
@@ -53,7 +40,7 @@ export default function ReachOutModal({ contactData, onClose }) {
       } catch {
         if (!cancelled) {
           const firstName = contactData.name?.split(' ')[0] || 'there';
-          setSubject(channel === 'email' ? `Hi ${firstName}!` : '');
+          setSubject(`Hi ${firstName}!`);
           setBody(`Hi ${firstName}, great connecting with you!`);
         }
       } finally {
@@ -62,82 +49,39 @@ export default function ReachOutModal({ contactData, onClose }) {
     }
     compose();
     return () => { cancelled = true; };
-  }, [channel, contactData]);
+  }, [contactData]);
 
-  function cleanPhone(ph) {
-    return ph.replace(/[\s\-()]/g, '');
-  }
+  async function handleShare() {
+    const shareText = body.trim();
+    if (!shareText) return;
 
-  const needsEmail = channel === 'email' && !email.trim();
-  const needsPhone = (channel === 'whatsapp' || channel === 'sms') && !phone.trim();
-  const canSend = body.trim() && !needsEmail && !needsPhone;
+    // Use native Web Share API (opens the OS share sheet)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: subject,
+          text: shareText,
+        });
+        onClose();
+        return;
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+      }
+    }
 
-  function handleSend() {
-    if (!canSend) return;
-
-    if (channel === 'email') {
-      const mailto = `mailto:${encodeURIComponent(email.trim())}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      window.open(mailto, '_blank');
-      setToast({ message: 'Opening email app...', type: 'success' });
-    } else if (channel === 'whatsapp') {
-      const ph = cleanPhone(phone);
-      window.open(`https://wa.me/${ph}?text=${encodeURIComponent(body)}`, '_blank');
-      setToast({ message: 'Opening WhatsApp...', type: 'success' });
-    } else if (channel === 'sms') {
-      const ph = cleanPhone(phone);
-      window.open(`sms:${ph}?body=${encodeURIComponent(body)}`, '_blank');
-      setToast({ message: 'Opening Messages...', type: 'success' });
+    // Fallback: copy to clipboard
+    try {
+      const fullText = subject ? `${subject}\n\n${shareText}` : shareText;
+      await navigator.clipboard.writeText(fullText);
+      setToast({ message: 'Copied to clipboard', type: 'success' });
+    } catch {
+      setToast({ message: 'Could not share — try copying manually', type: 'error' });
     }
   }
-
-  const sendLabel = {
-    email: 'Open Email',
-    whatsapp: 'Open WhatsApp',
-    sms: 'Open Messages',
-  };
 
   return (
     <Modal title={`Message ${contactData.name || 'Contact'}`} onClose={onClose}>
       <div className="reachout">
-        <div className="reachout__tabs">
-          {CHANNELS.map(ch => (
-            <button
-              key={ch.id}
-              className={`reachout__tab ${channel === ch.id ? 'reachout__tab--active' : ''}`}
-              onClick={() => setChannel(ch.id)}
-              aria-pressed={channel === ch.id}
-            >
-              <ch.icon size={14} />
-              <span>{ch.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Recipient — always editable */}
-        {channel === 'email' ? (
-          <div className="reachout__recipient-row">
-            <span className="reachout__recipient-label">To:</span>
-            <input
-              className="reachout__recipient-input"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={`${contactData.name || 'Contact'}'s email`}
-            />
-          </div>
-        ) : (
-          <div className="reachout__recipient-row">
-            <span className="reachout__recipient-label">To:</span>
-            <input
-              className="reachout__recipient-input"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder={`${contactData.name || 'Contact'}'s phone`}
-            />
-          </div>
-        )}
-
         {composing ? (
           <div className="reachout__composing">
             <div className="reachout__composing-dot" />
@@ -145,14 +89,6 @@ export default function ReachOutModal({ contactData, onClose }) {
           </div>
         ) : (
           <>
-            {channel === 'email' && (
-              <Input
-                label="Subject"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-              />
-            )}
-
             <div className="reachout__body-wrap">
               <TextArea
                 label="Message"
@@ -187,12 +123,11 @@ export default function ReachOutModal({ contactData, onClose }) {
         <Button
           variant="primary"
           fullWidth
-          icon={Send}
-          loading={sending}
-          disabled={composing || !canSend}
-          onClick={handleSend}
+          icon={Share2}
+          disabled={composing || !body.trim()}
+          onClick={handleShare}
         >
-          {sendLabel[channel]}
+          {navigator.share ? 'Share' : 'Copy to Clipboard'}
         </Button>
       </div>
 
