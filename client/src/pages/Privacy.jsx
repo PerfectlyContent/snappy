@@ -21,7 +21,7 @@ export default function Privacy() {
           <p>
             Snappy is an AI-powered filing assistant. You take a photo or speak a voice memo,
             and Snappy classifies it and helps you save it to Google Calendar, Google Drive,
-            Google Contacts, or your personal notes.
+            Google Contacts, or your personal reminders.
           </p>
         </section>
 
@@ -52,7 +52,7 @@ export default function Privacy() {
         <section>
           <h2>Data Storage</h2>
           <p>
-            Your notes and activity history are stored locally on your device using browser
+            Your reminders and activity history are stored locally on your device using browser
             storage. They are not uploaded to any server.
           </p>
           <p>
@@ -77,7 +77,7 @@ export default function Privacy() {
             This removes your session and stops all access to your Google data.
           </p>
           <p>
-            To clear your local notes and activity, clear your browser data for this site.
+            To clear your local reminders and activity, clear your browser data for this site.
           </p>
         </section>
 

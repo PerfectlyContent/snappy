@@ -7,15 +7,16 @@ import {
 } from 'lucide-react';
 import Button from '../components/Common/Button';
 import Toast from '../components/Common/Toast';
+import ConfirmModal from '../components/Common/ConfirmModal';
 import './Settings.css';
 
 export default function Settings() {
   const { user, authenticated, provider, login, logout, calendarConnected, connectCalendar } = useAuth();
   const navigate = useNavigate();
   const [toast, setToast] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   function handleClearLibrary() {
-    if (!window.confirm('Delete all saved items from your library? This cannot be undone.')) return;
     try {
       const tx = indexedDB.open('snappy_library');
       tx.onsuccess = (e) => {
@@ -27,12 +28,14 @@ export default function Settings() {
     } catch {
       setToast({ message: 'Could not clear library', type: 'error' });
     }
+    setConfirmAction(null);
   }
 
   function handleClearActivity() {
     localStorage.removeItem('snappy_activity');
     localStorage.removeItem('snappy_notes');
     setToast({ message: 'Activity cleared', type: 'success' });
+    setConfirmAction(null);
   }
 
   const services = [
@@ -119,16 +122,16 @@ export default function Settings() {
       <div className="settings__section">
         <h2 className="settings__section-label">Storage & Data</h2>
         <div className="settings__group">
-          <button className="settings__row settings__row--action" onClick={handleClearActivity}>
+          <button className="settings__row settings__row--action" onClick={() => setConfirmAction('activity')}>
             <div className="settings__row-icon settings__row-icon--subtle">
               <Trash2 size={18} strokeWidth={1.5} />
             </div>
             <div className="settings__row-text">
               <span className="settings__row-label">Clear Activity</span>
-              <span className="settings__row-desc">Remove notes and activity history</span>
+              <span className="settings__row-desc">Remove reminders and activity history</span>
             </div>
           </button>
-          <button className="settings__row settings__row--action" onClick={handleClearLibrary}>
+          <button className="settings__row settings__row--action" onClick={() => setConfirmAction('library')}>
             <div className="settings__row-icon settings__row-icon--subtle">
               <Trash2 size={18} strokeWidth={1.5} />
             </div>
@@ -188,6 +191,26 @@ export default function Settings() {
         <Shield size={12} />
         <span>Your data is processed securely and never stored on our servers.</span>
       </div>
+
+      {confirmAction === 'activity' && (
+        <ConfirmModal
+          title="Clear Activity"
+          message="This will permanently remove all your reminders and activity history. This cannot be undone."
+          confirmLabel="Delete"
+          onConfirm={handleClearActivity}
+          onClose={() => setConfirmAction(null)}
+        />
+      )}
+
+      {confirmAction === 'library' && (
+        <ConfirmModal
+          title="Clear Library"
+          message="This will permanently delete all saved items from your library. This cannot be undone."
+          confirmLabel="Delete"
+          onConfirm={handleClearLibrary}
+          onClose={() => setConfirmAction(null)}
+        />
+      )}
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>

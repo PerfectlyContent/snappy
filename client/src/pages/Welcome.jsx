@@ -25,7 +25,7 @@ export default function Welcome() {
 
   function handleGuestContinue(e) {
     e.preventDefault();
-    sessionStorage.setItem('guest', 'true');
+    localStorage.setItem('snappy_visited', 'true');
     navigate('/');
   }
 
@@ -79,9 +79,19 @@ export default function Welcome() {
           Continue without signing in
         </button>
 
+        {/* What works without sign-in */}
+        <div className="welcome__guest-info">
+          <p className="welcome__guest-info-label">Works without an account:</p>
+          <ul className="welcome__guest-features">
+            <li>Snap and classify photos with AI</li>
+            <li>Save items to your library</li>
+            <li>Create and manage reminders</li>
+          </ul>
+        </div>
+
         {/* Footer */}
         <p className="welcome__footer-text">
-          Sign in to get AI-powered daily snapshots of your agenda.
+          Sign in to unlock AI daily briefings and calendar integration.
         </p>
       </div>
 

@@ -19,6 +19,9 @@ export function AuthProvider({ children }) {
       setProvider(data.provider || null);
       setAppleEnabled(!!data.appleEnabled);
       setCalendarConnected(!!data.calendarConnected);
+      if (data.authenticated) {
+        localStorage.setItem('snappy_visited', 'true');
+      }
     } catch {
       setAuthenticated(false);
       setUser(null);

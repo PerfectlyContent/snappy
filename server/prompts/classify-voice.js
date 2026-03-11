@@ -5,7 +5,7 @@ Transcript: "{{TRANSCRIPT}}"
 Today's date is {{TODAY}}. Use this to resolve relative dates like "tomorrow", "next Monday", "this Friday", etc.
 
 Classify as "calendar" if the transcript describes a scheduled event, meeting, appointment, or time-specific task.
-Classify as "note" if the transcript is a general thought, reminder without a specific time, idea, list, or anything that should just be saved as a note.
+Classify as "note" if the transcript is a general thought, reminder without a specific time, idea, list, or anything that should just be saved as a reminder.
 
 For calendar events, return:
 {
@@ -22,12 +22,12 @@ For calendar events, return:
   }
 }
 
-For voice notes, return:
+For reminders, return:
 {
   "type": "note",
   "confidence": 0.0-1.0,
   "data": {
-    "title": "string — short summary of the note (max 6 words)",
+    "title": "string — a concise, actionable title for the reminder (max 6 words)",
     "content": "string — the full transcript cleaned up into readable text"
   }
 }

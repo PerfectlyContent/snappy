@@ -4,6 +4,7 @@ import Card from '../components/Common/Card';
 import Button from '../components/Common/Button';
 import Toast from '../components/Common/Toast';
 import { useVoice } from '../hooks/useVoice';
+import { api } from '../utils/api';
 import './Notes.css';
 
 const STORAGE_KEY = 'snappy_notes';
@@ -29,11 +30,25 @@ export default function Notes() {
 
   const [voiceSource, setVoiceSource] = useState(false);
 
-  const handleVoiceComplete = useCallback((text) => {
+  const handleVoiceComplete = useCallback(async (text) => {
     setComposing(true);
     setContent(text);
     setTitle('');
     setVoiceSource(true);
+
+    // Auto-generate a title using the classify API
+    try {
+      const result = await api.classifyVoice(text);
+      if (result?.type === 'note' && result?.data?.title) {
+        setTitle(result.data.title);
+      }
+      if (result?.type === 'note' && result?.data?.content) {
+        setContent(result.data.content);
+      }
+    } catch (err) {
+      // Silently fail — user can still type a title manually
+      console.warn('Auto-title generation failed:', err);
+    }
   }, []);
 
   const handleVoiceError = useCallback((message) => {
@@ -64,6 +79,7 @@ export default function Notes() {
       title: title.trim() || 'Untitled',
       content: content.trim(),
       source: voiceSource ? 'voice' : 'typed',
+      completed: false,
       timestamp: new Date().toISOString(),
     };
 
@@ -74,7 +90,7 @@ export default function Notes() {
     setContent('');
     setComposing(false);
     setVoiceSource(false);
-    setToast({ message: 'Note saved', type: 'success' });
+    setToast({ message: 'Reminder saved', type: 'success' });
   }
 
   function handleDelete(id) {
@@ -82,7 +98,16 @@ export default function Notes() {
     setNotes(updated);
     saveNotes(updated);
     setExpandedId(null);
-    setToast({ message: 'Note deleted', type: 'success' });
+    setToast({ message: 'Reminder deleted', type: 'success' });
+  }
+
+  function handleToggleCompleted(id, e) {
+    e.stopPropagation();
+    const updated = notes.map(n =>
+      n.id === id ? { ...n, completed: !n.completed } : n
+    );
+    setNotes(updated);
+    saveNotes(updated);
   }
 
   function handleExpand(id) {
@@ -102,7 +127,7 @@ export default function Notes() {
     setNotes(updated);
     saveNotes(updated);
     setExpandedId(null);
-    setToast({ message: 'Note updated', type: 'success' });
+    setToast({ message: 'Reminder updated', type: 'success' });
   }
 
   function formatTime(ts) {
@@ -118,7 +143,7 @@ export default function Notes() {
   return (
     <div className={`notes ${entered ? 'notes--entered' : ''}`}>
       <div className="notes__top">
-        <h1 className="notes__heading">Notes</h1>
+        <h1 className="notes__heading">Reminders</h1>
         <div className="notes__top-actions">
           <button
             className={`notes__voice-btn ${listening ? 'notes__voice-btn--active' : ''}`}
@@ -129,17 +154,17 @@ export default function Notes() {
               }
               listening ? stopListening() : startListening();
             }}
-            aria-label={listening ? 'Stop recording' : 'Voice note'}
+            aria-label={listening ? 'Stop recording' : 'Voice reminder'}
           >
             <Mic size={18} />
           </button>
           <button
             className="notes__new-btn"
             onClick={() => { setComposing(!composing); setTitle(''); setContent(''); }}
-            aria-label={composing ? 'Cancel new note' : 'New note'}
+            aria-label={composing ? 'Cancel new reminder' : 'New reminder'}
           >
             {composing ? <X size={18} /> : <Plus size={18} />}
-            <span>{composing ? 'Cancel' : 'New Note'}</span>
+            <span>{composing ? 'Cancel' : 'New Reminder'}</span>
           </button>
         </div>
       </div>
@@ -163,7 +188,7 @@ export default function Notes() {
             />
             <textarea
               className="notes__composer-content"
-              placeholder="Write your note..."
+              placeholder="Write your reminder..."
               value={content}
               rows={4}
               onChange={(e) => setContent(e.target.value)}
@@ -197,27 +222,39 @@ export default function Notes() {
               <line x1="79" y1="85" x2="91" y2="85" stroke="currentColor" strokeWidth="1.5" opacity="0.15" strokeLinecap="round"/>
             </svg>
           </div>
-          <h3>No notes yet</h3>
+          <h3>No reminders yet</h3>
           <p>Jot down thoughts or speak to Snappy</p>
           <Button variant="secondary" size="small" onClick={() => setComposing(true)}>
-            Create your first note
+            Create your first reminder
           </Button>
         </div>
       ) : (
         <div className="notes__list">
           {notes.map((note) => (
-            <div key={note.id} className="notes__card-wrap">
+            <div key={note.id} className={`notes__card-wrap ${note.completed ? 'notes__card-wrap--completed' : ''}`}>
               <button
                 className={`notes__card ${expandedId === note.id ? 'notes__card--expanded' : ''}`}
                 onClick={() => handleExpand(note.id)}
                 aria-expanded={expandedId === note.id}
               >
                 <div className="notes__card-header">
-                  <div className="notes__card-icon">
-                    <StickyNote size={16} strokeWidth={1.5} />
-                  </div>
+                  <label
+                    className={`notes__checkbox ${note.completed ? 'notes__checkbox--checked' : ''}`}
+                    onClick={(e) => handleToggleCompleted(note.id, e)}
+                    aria-label={note.completed ? 'Mark as incomplete' : 'Mark as complete'}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!note.completed}
+                      onChange={() => {}}
+                      tabIndex={-1}
+                    />
+                    <span className="notes__checkbox-box">
+                      {note.completed && <Check size={12} strokeWidth={3} />}
+                    </span>
+                  </label>
                   <div className="notes__card-info">
-                    <span className="notes__card-title">{note.title}</span>
+                    <span className={`notes__card-title ${note.completed ? 'notes__card-title--completed' : ''}`}>{note.title}</span>
                     <span className="notes__card-time">{formatTime(note.timestamp)}</span>
                   </div>
                   <ChevronDown
@@ -226,7 +263,7 @@ export default function Notes() {
                   />
                 </div>
                 {expandedId !== note.id && note.content && (
-                  <p className="notes__card-preview">{note.content}</p>
+                  <p className={`notes__card-preview ${note.completed ? 'notes__card-preview--completed' : ''}`}>{note.content}</p>
                 )}
               </button>
 
@@ -243,13 +280,13 @@ export default function Notes() {
                     value={editData.content || ''}
                     rows={4}
                     onChange={(e) => setEditData(prev => ({ ...prev, content: e.target.value }))}
-                    placeholder="Note content"
+                    placeholder="Reminder content"
                   />
                   <div className="notes__card-actions">
                     <Button variant="primary" size="small" icon={Check} onClick={() => handleSaveEdit(note.id)}>
                       Save
                     </Button>
-                    <button className="notes__delete-btn" onClick={() => handleDelete(note.id)} aria-label="Delete note">
+                    <button className="notes__delete-btn" onClick={() => handleDelete(note.id)} aria-label="Delete reminder">
                       <Trash2 size={16} />
                     </button>
                   </div>

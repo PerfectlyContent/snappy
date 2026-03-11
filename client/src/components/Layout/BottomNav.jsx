@@ -5,7 +5,7 @@ import './BottomNav.css';
 const NAV_ITEMS = [
   { path: '/', icon: Camera, label: 'Snap' },
   { path: '/daily', icon: Sparkles, label: 'My Day' },
-  { path: '/notes', icon: StickyNote, label: 'Notes' },
+  { path: '/notes', icon: StickyNote, label: 'Reminders' },
   { path: '/library', icon: Archive, label: 'Library' },
   { path: '/settings', icon: Settings, label: 'Settings' },
 ];
