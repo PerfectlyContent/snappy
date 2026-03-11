@@ -10,7 +10,7 @@ import Toast from '../components/Common/Toast';
 import './Settings.css';
 
 export default function Settings() {
-  const { user, authenticated, provider, login, logout, appleEnabled, calendarConnected, connectCalendar } = useAuth();
+  const { user, authenticated, provider, login, logout, calendarConnected, connectCalendar } = useAuth();
   const navigate = useNavigate();
   const [toast, setToast] = useState(null);
 
@@ -95,15 +95,10 @@ export default function Settings() {
           <Button variant="primary" fullWidth onClick={login}>
             Sign in with Google
           </Button>
-          {appleEnabled && (
-            <Button
-              variant="secondary"
-              fullWidth
-              onClick={() => { window.location.href = '/auth/apple'; }}
-            >
-              Sign in with Apple
-            </Button>
-          )}
+          <button className="settings__apple-btn" disabled>
+            <span>Sign in with Apple</span>
+            <span className="settings__coming-soon">Coming Soon</span>
+          </button>
         </div>
       )}
 
