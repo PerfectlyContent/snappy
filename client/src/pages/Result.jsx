@@ -6,7 +6,7 @@ import {
   UserPlus, X, Archive, Download, Ticket, CookingPot, Pill,
   Package, PenLine, Monitor
 } from 'lucide-react';
-import { buildCalendarUrl, buildContactUrl, downloadIcsFile, downloadVCard, downloadImage } from '../utils/export';
+import { buildCalendarUrl, downloadIcsFile, downloadVCard, downloadImage } from '../utils/export';
 import { saveItem } from '../utils/storage';
 import Card from '../components/Common/Card';
 import Button from '../components/Common/Button';
@@ -169,12 +169,24 @@ export default function Result() {
       return;
     }
 
-    // Contact → download vCard with all fields pre-filled
+    // Contact → save to library + open vCard so OS shows the contact creation card
     if (type === 'contact') {
-      downloadVCard(editedData);
-      setSaved(true);
-      setToast({ message: 'Contact downloaded', type: 'success' });
-      logActivity(type, editedData, null);
+      setSaving(true);
+      try {
+        const imageData = sessionStorage.getItem('snappy_image');
+        const fileName = sessionStorage.getItem('snappy_fileName') || null;
+        const id = await saveItem({ type, data: editedData, image: imageData, fileName });
+        downloadVCard(editedData);
+        setSaved(true);
+        setSavedLink(`/library?id=${id}`);
+        setToast({ message: 'Contact saved', type: 'success' });
+        logActivity(type, editedData, `/library?id=${id}`);
+      } catch (err) {
+        console.error('Failed to save contact:', err);
+        setToast({ message: 'Failed to save — please try again', type: 'error' });
+      } finally {
+        setSaving(false);
+      }
       return;
     }
 
@@ -455,7 +467,7 @@ export default function Result() {
       </Card>
 
       {/* Save destination hint */}
-      {!saved && !saving && !['calendar', 'contact', 'note'].includes(type) && (
+      {!saved && !saving && !['calendar', 'note'].includes(type) && (
         <div className="result__destination">
           <Archive size={14} />
           <span>Saves to your Library</span>
@@ -477,7 +489,7 @@ export default function Result() {
             {savedLink && (
               <a href={savedLink} target="_blank" rel="noopener noreferrer" className="result__view-link">
                 <ExternalLink size={16} />
-                {type === 'calendar' ? 'Open in Calendar' : type === 'contact' ? 'Open in Contacts' : 'View in Library'}
+                {type === 'calendar' ? 'Open in Calendar' : 'View in Library'}
               </a>
             )}
           </>
@@ -493,16 +505,17 @@ export default function Result() {
                 </Button>
               </>
             ) : type === 'contact' ? (
-              <>
-                <Button variant="primary" size="large" fullWidth icon={Download} onClick={handleSave}>
-                  Save Contact (.vcf)
-                </Button>
-                <Button variant="secondary" fullWidth icon={Save} onClick={() => {
-                  window.open(buildContactUrl(editedData), '_blank');
-                }}>
-                  Open in Google Contacts
-                </Button>
-              </>
+              <Button
+                variant="primary"
+                size="large"
+                fullWidth
+                icon={saving ? undefined : UserPlus}
+                onClick={handleSave}
+                loading={saving}
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : 'Add to Contacts'}
+              </Button>
             ) : (
               <Button
                 variant="primary"
