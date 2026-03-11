@@ -2,8 +2,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
-  padding: var(--space-6);
+  height: 100dvh;
+  padding: var(--space-4) var(--space-6);
   overflow: hidden;
   opacity: 0;
   transition: opacity var(--duration-enter) var(--ease-spring);
@@ -24,19 +24,20 @@
   transition: color var(--duration-hover) var(--ease-standard);
   min-height: 44px;
   z-index: 1;
+  flex-shrink: 0;
 }
 
 .onb__skip:hover {
   color: var(--label-secondary);
 }
 
-/* Content area */
+/* Content area — centered, takes remaining space */
 .onb__content {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-8) 0;
+  min-height: 0;
 }
 
 /* Slide */
@@ -46,6 +47,7 @@
   align-items: center;
   text-align: center;
   max-width: 340px;
+  padding: 0 var(--space-2);
   animation: onbSlideIn var(--duration-complex) var(--ease-spring) forwards;
 }
 
@@ -62,13 +64,13 @@
 
 /* Icon */
 .onb__icon-wrap {
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   border-radius: var(--radius-2xl);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-6);
 }
 
 /* Typography */
@@ -82,7 +84,7 @@
 }
 
 .onb__subtitle {
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   line-height: 1.6;
   color: var(--label-secondary);
   max-width: 300px;
@@ -93,9 +95,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-6);
-  padding-bottom: var(--space-8);
+  gap: var(--space-5);
+  padding-bottom: env(safe-area-inset-bottom, var(--space-6));
   z-index: 1;
+  flex-shrink: 0;
 }
 
 /* Dots */
