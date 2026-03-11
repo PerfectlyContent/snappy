@@ -23,8 +23,8 @@ function AppRoutes() {
     return <Welcome />;
   }
 
-  // Redirect unauthenticated users to Welcome page (unless they chose guest mode)
-  if (!authenticated && location.pathname === '/' && !sessionStorage.getItem('guest')) {
+  // Show Welcome page on first visit only (not on deep links to other pages)
+  if (!authenticated && location.pathname === '/' && !localStorage.getItem('snappy_visited')) {
     return <Navigate to="/welcome" replace />;
   }
 
