@@ -6,8 +6,18 @@ import { getTodayEvents } from '../services/calendar.js';
 
 const router = Router();
 
+// In-memory cache: userId -> { data, expiresAt }
+const snapCache = new Map();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 router.get('/daily', requireAuth, async (req, res) => {
   try {
+    const userId = req.session.userId || req.session.email || 'anonymous';
+    const cached = snapCache.get(userId);
+    if (cached && cached.expiresAt > Date.now()) {
+      return res.json({ ...cached.data, cached: true });
+    }
+
     // Fetch today's Google Calendar events if the user signed in with Google
     let events = [];
     if (req.session.calendarConnected && req.session.tokens) {
@@ -30,13 +40,17 @@ router.get('/daily', requireAuth, async (req, res) => {
 
     const snap = await generateDailySnap(events, notes);
 
-    res.json({
+    const result = {
       ...snap,
       events,
       eventCount: events.length,
       noteCount: notes.length,
       generatedAt: new Date().toISOString(),
-    });
+    };
+
+    snapCache.set(userId, { data: result, expiresAt: Date.now() + CACHE_TTL_MS });
+
+    res.json(result);
   } catch (err) {
     console.error('Daily snap error:', err);
     res.status(500).json({ error: 'Failed to generate daily snap', message: err.message });

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AppShell from './components/Layout/AppShell';
+import Onboarding from './pages/Onboarding';
 import Welcome from './pages/Welcome';
 import Home from './pages/Home';
 import Result from './pages/Result';
@@ -16,15 +17,23 @@ function AppRoutes() {
   const location = useLocation();
   const { authenticated, loading } = useAuth();
   const isWelcome = location.pathname === '/welcome';
+  const isOnboarding = location.pathname === '/onboarding';
 
   if (loading) return null;
+
+  if (isOnboarding) {
+    return <Onboarding />;
+  }
 
   if (isWelcome) {
     return <Welcome />;
   }
 
-  // Show Welcome page on first visit only (not on deep links to other pages)
+  // First-time visitors: show onboarding, then welcome
   if (!authenticated && location.pathname === '/' && !localStorage.getItem('snappy_visited')) {
+    if (!localStorage.getItem('snappy_onboarded')) {
+      return <Navigate to="/onboarding" replace />;
+    }
     return <Navigate to="/welcome" replace />;
   }
 

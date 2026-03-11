@@ -227,6 +227,10 @@ export default function DailySnap() {
       {/* Loading state */}
       {loading && (
         <div className="dsnap__loading">
+          <div className="dsnap__loading-message">
+            <Sparkles size={16} className="dsnap__loading-icon" />
+            <span>Getting your daily snap ready...</span>
+          </div>
           <div className="dsnap__loading-shimmer" />
           <div className="dsnap__loading-shimmer dsnap__loading-shimmer--short" />
           <div className="dsnap__loading-shimmer dsnap__loading-shimmer--medium" />

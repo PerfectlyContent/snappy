@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
+import morgan from 'morgan';
 import cookieSession from 'cookie-session';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -34,6 +35,12 @@ app.use(express.urlencoded({ extended: true }));
 if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
+
+// Request logging
+app.use(morgan(process.env.NODE_ENV === 'production'
+  ? ':remote-addr :method :url :status :res[content-length] - :response-time ms'
+  : 'dev'
+));
 
 // Session (cookie-based — survives server restarts / deploys)
 app.use(cookieSession({

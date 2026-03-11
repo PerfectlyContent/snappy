@@ -60,6 +60,7 @@ export default function Result() {
   const [entered, setEntered] = useState(false);
   const [attendeeInput, setAttendeeInput] = useState('');
   const [imageExpanded, setImageExpanded] = useState(false);
+  const [selectedEvents, setSelectedEvents] = useState({});
 
   useEffect(() => {
     requestAnimationFrame(() => setEntered(true));
@@ -76,8 +77,12 @@ export default function Result() {
     setResult(parsed);
     if (parsed.type === 'calendar' && parsed.data?.events) {
       setEditedData(parsed.data);
+      const sel = {};
+      parsed.data.events.forEach((_, i) => { sel[i] = true; });
+      setSelectedEvents(sel);
     } else if (parsed.type === 'calendar' && !parsed.data?.events) {
       setEditedData({ events: [parsed.data] });
+      setSelectedEvents({ 0: true });
     } else {
       setEditedData(parsed.data || {});
     }
@@ -91,6 +96,8 @@ export default function Result() {
   const lowConfidence = confidence < 0.6;
   const Icon = TYPE_ICONS[type] || FileText;
   const events = type === 'calendar' ? (editedData.events || []) : [];
+  const selectedCount = events.filter((_, i) => selectedEvents[i]).length;
+  const getSelectedEvents = () => events.filter((_, i) => selectedEvents[i]);
 
   function updateField(key, value) {
     setEditedData(prev => ({ ...prev, [key]: value }));
@@ -124,7 +131,11 @@ export default function Result() {
   }
 
   function handleSaveIcs() {
-    const evts = editedData.events || [editedData];
+    const evts = events.length > 1 ? getSelectedEvents() : (editedData.events || [editedData]);
+    if (evts.length === 0) {
+      setToast({ message: 'Select at least one event', type: 'error' });
+      return;
+    }
     downloadIcsFile(evts);
     const msg = evts.length > 1
       ? `${evts.length} calendar files downloaded`
@@ -150,7 +161,11 @@ export default function Result() {
 
     // Calendar → deep link (no API needed)
     if (type === 'calendar') {
-      const evts = editedData.events || [editedData];
+      const evts = events.length > 1 ? getSelectedEvents() : (editedData.events || [editedData]);
+      if (evts.length === 0) {
+        setToast({ message: 'Select at least one event', type: 'error' });
+        return;
+      }
       let link = null;
       evts.forEach((evt, i) => {
         const url = buildCalendarUrl(evt);
@@ -332,9 +347,18 @@ export default function Result() {
               </div>
             ) : type === 'calendar' && events.length > 0 ? (
               events.map((evt, i) => (
-                <div key={i} className="result__event-block">
+                <div key={i} className={`result__event-block ${events.length > 1 && !selectedEvents[i] ? 'result__event-block--deselected' : ''}`}>
                   {events.length > 1 && (
-                    <div className="result__event-number">Event {i + 1}</div>
+                    <label className="result__event-header">
+                      <input
+                        type="checkbox"
+                        className="result__event-checkbox"
+                        checked={!!selectedEvents[i]}
+                        onChange={() => setSelectedEvents(prev => ({ ...prev, [i]: !prev[i] }))}
+                      />
+                      <span className="result__event-number">Event {i + 1}</span>
+                      <span className="result__event-title-hint">{evt.eventTitle}</span>
+                    </label>
                   )}
                   <div className="result__field">
                     <label className="result__field-label">Title</label>
@@ -497,11 +521,15 @@ export default function Result() {
           <>
             {type === 'calendar' ? (
               <>
-                <Button variant="primary" size="large" fullWidth icon={Save} onClick={handleSave}>
-                  {events.length > 1 ? `Add ${events.length} Events to Google Calendar` : 'Add to Google Calendar'}
+                <Button variant="primary" size="large" fullWidth icon={Save} onClick={handleSave} disabled={events.length > 1 && selectedCount === 0}>
+                  {events.length > 1
+                    ? `Add ${selectedCount} of ${events.length} Events to Google Calendar`
+                    : 'Add to Google Calendar'}
                 </Button>
-                <Button variant="secondary" fullWidth icon={Download} onClick={handleSaveIcs}>
-                  {events.length > 1 ? `Download ${events.length} .ics Files` : 'Add to Apple Calendar (.ics)'}
+                <Button variant="secondary" fullWidth icon={Download} onClick={handleSaveIcs} disabled={events.length > 1 && selectedCount === 0}>
+                  {events.length > 1
+                    ? `Download ${selectedCount} .ics ${selectedCount === 1 ? 'File' : 'Files'}`
+                    : 'Add to Apple Calendar (.ics)'}
                 </Button>
               </>
             ) : type === 'contact' ? (

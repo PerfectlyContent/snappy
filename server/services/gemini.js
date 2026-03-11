@@ -65,7 +65,7 @@ export async function composeForwardMessage(classificationData) {
 }
 
 export async function generateDailySnap(events, notes) {
-  const model = getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const model = getGenAI().getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const today = new Date().toISOString().split('T')[0];
   const now = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
