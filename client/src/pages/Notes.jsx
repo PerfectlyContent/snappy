@@ -4,20 +4,38 @@ import Card from '../components/Common/Card';
 import Button from '../components/Common/Button';
 import Toast from '../components/Common/Toast';
 import { useVoice } from '../hooks/useVoice';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import './Notes.css';
 
-const STORAGE_KEY = 'snappy_notes';
-
-function loadNotes() {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+function getStorageKey(user) {
+  const id = user?.email || 'anonymous';
+  return `snappy_notes_${id}`;
 }
 
-function saveNotes(notes) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+// One-time migration: move old shared notes to user-scoped key
+function migrateNotes(user) {
+  const oldKey = 'snappy_notes';
+  const newKey = getStorageKey(user);
+  const old = localStorage.getItem(oldKey);
+  if (old && !localStorage.getItem(newKey)) {
+    localStorage.setItem(newKey, old);
+  }
+  // Clean up old shared key after migration
+  if (old) localStorage.removeItem(oldKey);
+}
+
+function loadNotes(user) {
+  migrateNotes(user);
+  return JSON.parse(localStorage.getItem(getStorageKey(user)) || '[]');
+}
+
+function saveNotes(notes, user) {
+  localStorage.setItem(getStorageKey(user), JSON.stringify(notes));
 }
 
 export default function Notes() {
+  const { user } = useAuth();
   const [notes, setNotes] = useState([]);
   const [composing, setComposing] = useState(false);
   const [title, setTitle] = useState('');
@@ -64,9 +82,9 @@ export default function Notes() {
   });
 
   useEffect(() => {
-    setNotes(loadNotes());
+    setNotes(loadNotes(user));
     requestAnimationFrame(() => setEntered(true));
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (composing && titleRef.current) {
@@ -88,7 +106,7 @@ export default function Notes() {
 
     const updated = [note, ...notes];
     setNotes(updated);
-    saveNotes(updated);
+    saveNotes(updated, user);
     setTitle('');
     setContent('');
     setComposing(false);
@@ -99,7 +117,7 @@ export default function Notes() {
   function handleDelete(id) {
     const updated = notes.filter(n => n.id !== id);
     setNotes(updated);
-    saveNotes(updated);
+    saveNotes(updated, user);
     setExpandedId(null);
     setToast({ message: 'Reminder deleted', type: 'success' });
   }
@@ -109,7 +127,7 @@ export default function Notes() {
       n.id === id ? { ...n, completed: !n.completed } : n
     );
     setNotes(updated);
-    saveNotes(updated);
+    saveNotes(updated, user);
   }
 
   function handleExpand(id) {
@@ -127,7 +145,7 @@ export default function Notes() {
       n.id === id ? { ...n, title: editData.title || 'Untitled', content: editData.content } : n
     );
     setNotes(updated);
-    saveNotes(updated);
+    saveNotes(updated, user);
     setExpandedId(null);
     setToast({ message: 'Reminder updated', type: 'success' });
   }
