@@ -22,6 +22,9 @@ function AppRoutes() {
   if (loading) return null;
 
   if (isOnboarding) {
+    if (authenticated || localStorage.getItem('snappy_onboarded')) {
+      return <Navigate to="/" replace />;
+    }
     return <Onboarding />;
   }
 
