@@ -1,9 +1,12 @@
+/* ==============================
+   Onboarding — full-screen carousel
+   ============================== */
+
 .onb {
   position: relative;
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  padding: var(--space-4) var(--space-6);
   overflow: hidden;
   opacity: 0;
   transition: opacity var(--duration-enter) var(--ease-spring);
@@ -13,118 +16,109 @@
   opacity: 1;
 }
 
-/* Skip */
-.onb__skip {
-  align-self: flex-end;
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--label-tertiary);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  transition: color var(--duration-hover) var(--ease-standard);
-  min-height: 44px;
-  z-index: 1;
+/* ---------- Header ---------- */
+
+.onb__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-6);
   flex-shrink: 0;
+  z-index: 1;
 }
 
-.onb__skip:hover {
-  color: var(--label-secondary);
+.onb__logo {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--accent-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Content area — centered, takes remaining space */
-.onb__content {
+.onb__brand {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--label-primary);
+}
+
+/* ---------- Body (swipeable) ---------- */
+
+.onb__body {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 0;
   touch-action: pan-y;
   user-select: none;
+  padding: 0 var(--space-8);
 }
 
-/* Slide */
-.onb__slide {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/* ---------- Hero illustration ---------- */
+
+.onb__hero {
+  width: 100%;
+  max-width: 300px;
+  aspect-ratio: 1;
+  margin-bottom: var(--space-8);
+  animation: onbFadeUp var(--duration-complex) var(--ease-spring) forwards;
+}
+
+/* ---------- Copy ---------- */
+
+.onb__copy {
   text-align: center;
-  max-width: 340px;
-  padding: 0 var(--space-2);
-  animation: onbSlideIn var(--duration-complex) var(--ease-spring) forwards;
+  max-width: 320px;
+  animation: onbFadeUp var(--duration-complex) var(--ease-spring) 60ms forwards;
+  opacity: 0;
 }
 
-@keyframes onbSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Icon */
-.onb__icon-wrap {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--radius-xl);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: var(--space-6);
-}
-
-/* Typography */
 .onb__title {
   font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 800;
   letter-spacing: -0.03em;
+  line-height: var(--leading-2xl);
   color: var(--label-primary);
   margin-bottom: var(--space-3);
 }
 
 .onb__subtitle {
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   line-height: 1.6;
   color: var(--label-secondary);
-  max-width: 280px;
 }
 
-.onb__hint {
-  margin-top: var(--space-4);
-  font-size: var(--text-xs);
-  font-weight: 500;
-  color: var(--label-tertiary);
-  padding: var(--space-1) var(--space-3);
-  background: var(--fill-tertiary);
-  border-radius: var(--radius-full);
-  letter-spacing: 0.01em;
-}
+/* ---------- Footer ---------- */
 
-/* Footer */
 .onb__footer {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-5);
-  padding-bottom: env(safe-area-inset-bottom, var(--space-6));
+  padding: 0 var(--space-6);
+  padding-bottom: env(safe-area-inset-bottom, var(--space-8));
   z-index: 1;
   flex-shrink: 0;
 }
 
-/* Dots */
+/* Dots — pill style */
 .onb__dots {
   display: flex;
-  gap: var(--space-2);
+  gap: 10px;
+  margin-bottom: var(--space-8);
 }
 
 .onb__dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: var(--radius-full);
-  background: var(--label-quaternary);
+  background: var(--accent-light);
   transition: all var(--duration-normal) var(--ease-snappy);
   padding: 0;
   cursor: pointer;
@@ -135,18 +129,24 @@
   background: var(--accent);
 }
 
-/* CTA */
+/* CTA button */
 .onb__cta {
   width: 100%;
-  max-width: 340px;
-  height: 52px;
+  max-width: 360px;
+  height: 56px;
   background: var(--accent);
   color: #FFFFFF;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xl);
   font-size: var(--text-base);
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.2);
   transition: background var(--duration-hover) var(--ease-standard),
               transform var(--duration-fast) var(--ease-snappy);
 }
@@ -159,34 +159,44 @@
   transform: scale(var(--interactive-active-scale));
 }
 
-/* Background blobs */
-.onb__bg {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-  pointer-events: none;
-  opacity: 0.3;
+/* Skip */
+.onb__skip {
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--label-tertiary);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-hover) var(--ease-standard);
+  min-height: 44px;
 }
 
-.onb__blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(100px);
+.onb__skip:hover {
+  color: var(--label-secondary);
 }
 
-.onb__blob--1 {
-  width: 50%;
-  height: 50%;
-  top: -15%;
-  right: -10%;
-  background: #e0e7ff;
+/* ==============================
+   Hero image
+   ============================== */
+
+.onb__hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-2xl);
 }
 
-.onb__blob--2 {
-  width: 40%;
-  height: 40%;
-  bottom: -5%;
-  left: -10%;
-  background: rgba(124, 58, 237, 0.12);
+/* ==============================
+   Animations
+   ============================== */
+
+@keyframes onbFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

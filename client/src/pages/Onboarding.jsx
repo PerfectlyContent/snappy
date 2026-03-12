@@ -1,32 +1,23 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Sparkles, FolderOpen } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import './Onboarding.css';
 
 const SLIDES = [
   {
-    icon: Camera,
-    color: '#7C3AED',
-    bg: 'rgba(124, 58, 237, 0.08)',
-    title: 'Snap it, sorted',
-    subtitle: 'Take a photo of anything — a receipt, a flyer, a business card — and AI files it for you in seconds.',
-    hint: 'Receipts, contacts, events, notes & more',
+    title: 'Capture anything.',
+    subtitle: 'Snap a photo or use your voice, Snappy figures out what it is for you.',
+    image: '/onboarding-1.png',
   },
   {
-    icon: Sparkles,
-    color: '#F59E0B',
-    bg: 'rgba(245, 158, 11, 0.08)',
-    title: 'Start every day clear',
-    subtitle: 'A quiet daily briefing that connects your calendar, reminders, and notes into one calm overview.',
-    hint: 'Calendar + reminders + smart nudges',
+    title: 'Snappy sorts it out.',
+    subtitle: 'It recognizes what you captured and sends it to the right place — events, contacts, receipts, reminders, and more.',
+    image: '/onboarding-2.png',
   },
   {
-    icon: FolderOpen,
-    color: '#22C55E',
-    bg: 'rgba(34, 197, 94, 0.08)',
-    title: 'Nothing gets lost',
-    subtitle: 'Every snap is searchable in your library. Voice notes become reminders. Events land in your calendar.',
-    hint: 'Library, voice capture & calendar sync',
+    title: 'See your day at a glance.',
+    subtitle: 'Get a smart daily summary based on your calendar and reminders, all in one place.',
+    image: '/onboarding-3.png',
   },
 ];
 
@@ -36,19 +27,18 @@ export default function Onboarding() {
   const [direction, setDirection] = useState('next');
   const [animating, setAnimating] = useState(false);
   const [entered, setEntered] = useState(false);
+  const touchStart = useRef(null);
 
   useEffect(() => {
     requestAnimationFrame(() => setEntered(true));
   }, []);
-
-  const touchStart = useRef(null);
 
   const goTo = useCallback((index) => {
     if (animating || index === current || index < 0 || index >= SLIDES.length) return;
     setDirection(index > current ? 'next' : 'prev');
     setAnimating(true);
     setCurrent(index);
-    setTimeout(() => setAnimating(false), 400);
+    setTimeout(() => setAnimating(false), 450);
   }, [animating, current]);
 
   function handleNext() {
@@ -78,39 +68,42 @@ export default function Onboarding() {
   }
 
   const slide = SLIDES[current];
-  const SlideIcon = slide.icon;
   const isLast = current === SLIDES.length - 1;
 
   return (
     <div className={`onb ${entered ? 'onb--entered' : ''}`}>
-      {/* Skip button */}
-      <button className="onb__skip" onClick={finish}>
-        Skip
-      </button>
+      {/* Header */}
+      <div className="onb__header">
+        <div className="onb__logo">
+          <img src="/logo.svg" alt="" width="28" height="28" />
+        </div>
+        <span className="onb__brand">Snappy</span>
+      </div>
 
-      {/* Slide content */}
+      {/* Swipeable area */}
       <div
-        className="onb__content"
+        className="onb__body"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        <div
-          key={current}
-          className={`onb__slide onb__slide--${direction}`}
-        >
-          <div
-            className="onb__icon-wrap"
-            style={{ background: slide.bg }}
-          >
-            <SlideIcon size={28} color={slide.color} strokeWidth={1.5} />
-          </div>
+        {/* Illustration hero */}
+        <div key={`illust-${current}`} className="onb__hero">
+          <img
+            className="onb__hero-img"
+            src={slide.image}
+            alt={slide.title}
+            draggable={false}
+          />
+        </div>
+
+        {/* Copy */}
+        <div key={`copy-${current}`} className="onb__copy">
           <h1 className="onb__title">{slide.title}</h1>
           <p className="onb__subtitle">{slide.subtitle}</p>
-          <span className="onb__hint">{slide.hint}</span>
         </div>
       </div>
 
-      {/* Bottom controls */}
+      {/* Footer */}
       <div className="onb__footer">
         {/* Dots */}
         <div className="onb__dots">
@@ -124,16 +117,16 @@ export default function Onboarding() {
           ))}
         </div>
 
-        {/* CTA button */}
+        {/* CTA */}
         <button className="onb__cta" onClick={handleNext}>
-          {isLast ? 'Get Started' : 'Continue'}
+          <span>{isLast ? 'Get Started' : 'Next'}</span>
+          {!isLast && <ArrowRight size={18} strokeWidth={2} />}
         </button>
-      </div>
 
-      {/* Background blobs */}
-      <div className="onb__bg" aria-hidden="true">
-        <div className="onb__blob onb__blob--1" />
-        <div className="onb__blob onb__blob--2" />
+        {/* Skip */}
+        <button className="onb__skip" onClick={finish}>
+          Skip
+        </button>
       </div>
     </div>
   );
