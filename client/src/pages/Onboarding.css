@@ -117,11 +117,19 @@
 .onb__dot {
   width: 6px;
   height: 6px;
+  border: none;
   border-radius: var(--radius-full);
   background: var(--accent-light);
   transition: all var(--duration-normal) var(--ease-snappy);
   padding: 0;
   cursor: pointer;
+}
+
+/* Remove purple focus outlines on onboarding interactive elements */
+.onb__dot:focus-visible,
+.onb__cta:focus-visible,
+.onb__skip:focus-visible {
+  outline: none;
 }
 
 .onb__dot--active {
