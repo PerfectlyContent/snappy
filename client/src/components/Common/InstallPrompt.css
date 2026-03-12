@@ -1,0 +1,118 @@
+.install-prompt {
+  position: fixed;
+  bottom: calc(var(--bottom-nav-height) + var(--space-4));
+  left: var(--space-4);
+  right: var(--space-4);
+  max-width: var(--content-max);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-elevated);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: install-prompt-in var(--duration-enter) var(--ease-spring) forwards;
+}
+
+@keyframes install-prompt-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.install-prompt__content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.install-prompt__icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-light);
+  color: var(--accent);
+  border-radius: var(--radius-md);
+}
+
+.install-prompt__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.install-prompt__title {
+  font-family: var(--font-text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--label-primary);
+  line-height: var(--leading-sm);
+}
+
+.install-prompt__subtitle {
+  font-family: var(--font-text);
+  font-size: var(--text-xs);
+  color: var(--label-secondary);
+  line-height: var(--leading-xs);
+}
+
+.install-prompt__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.install-prompt__install {
+  padding: var(--space-2) var(--space-4);
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-full);
+  font-family: var(--font-text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-smooth);
+  white-space: nowrap;
+}
+
+.install-prompt__install:hover {
+  background: var(--accent-hover);
+}
+
+.install-prompt__install:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.install-prompt__dismiss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-full);
+  color: var(--label-tertiary);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-smooth),
+              background var(--duration-fast) var(--ease-smooth);
+}
+
+.install-prompt__dismiss:hover {
+  color: var(--label-secondary);
+  background: var(--fill-primary);
+}

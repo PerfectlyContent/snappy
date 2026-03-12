@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AppShell from './components/Layout/AppShell';
+import InstallPrompt from './components/Common/InstallPrompt';
 import Onboarding from './pages/Onboarding';
 import Welcome from './pages/Welcome';
 import Home from './pages/Home';
@@ -62,6 +63,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <AppRoutes />
+        <InstallPrompt />
       </AuthProvider>
     </BrowserRouter>
   );

@@ -12,7 +12,10 @@ import Toast from '../components/Common/Toast';
 import Button from '../components/Common/Button';
 import './DailySnap.css';
 
-const NOTES_KEY = 'snappy_notes';
+function getNotesKey(user) {
+  const id = user?.email || 'anonymous';
+  return `snappy_notes_${id}`;
+}
 
 function getTimeOfDay() {
   const h = new Date().getHours();
@@ -78,7 +81,7 @@ export default function DailySnap() {
     setLoading(true);
     setError(null);
     try {
-      const notes = JSON.parse(localStorage.getItem(NOTES_KEY) || '[]');
+      const notes = JSON.parse(localStorage.getItem(getNotesKey(user)) || '[]');
       const notesParam = encodeURIComponent(JSON.stringify(
         notes.slice(0, 10).map(n => ({ title: n.title, content: n.content, source: n.source || 'typed' }))
       ));
@@ -371,15 +374,17 @@ export default function DailySnap() {
 }
 
 function NotesList() {
-  const [notes, setNotes] = useState(JSON.parse(localStorage.getItem(NOTES_KEY) || '[]'));
+  const { user } = useAuth();
+  const notesKey = getNotesKey(user);
+  const [notes, setNotes] = useState(JSON.parse(localStorage.getItem(notesKey) || '[]'));
   const recent = notes.slice(0, 4);
 
   function handleToggle(id) {
-    const allNotes = JSON.parse(localStorage.getItem(NOTES_KEY) || '[]');
+    const allNotes = JSON.parse(localStorage.getItem(notesKey) || '[]');
     const updated = allNotes.map(n =>
       n.id === id ? { ...n, completed: !n.completed } : n
     );
-    localStorage.setItem(NOTES_KEY, JSON.stringify(updated));
+    localStorage.setItem(notesKey, JSON.stringify(updated));
     setNotes(updated);
   }
 
