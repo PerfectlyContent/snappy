@@ -125,10 +125,8 @@
   cursor: pointer;
 }
 
-/* Remove purple focus outlines on onboarding interactive elements */
-.onb__dot:focus-visible,
-.onb__cta:focus-visible,
-.onb__skip:focus-visible {
+/* Remove purple focus outlines on all onboarding elements */
+.onb *:focus-visible {
   outline: none;
 }
 
